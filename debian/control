@@ -1,0 +1,36 @@
+Source: celluloid
+Section: video
+Priority: optional
+Maintainer: Debian Multimedia Maintainers <debian-multimedia@lists.debian.org>
+Uploaders: Ximin Luo <infinity0@debian.org>
+Build-Depends: debhelper-compat (= 13),
+ appstream-util,
+ autoconf-archive,
+ libepoxy-dev,
+ libgtk-3-dev (>= 3.22),
+ libmpv-dev (>= 0.32),
+ pkg-config,
+ python3:any
+Standards-Version: 4.5.0
+Homepage: https://github.com/celluloid-player/celluloid
+Vcs-Git: https://salsa.debian.org/multimedia-team/celluloid.git
+Vcs-Browser: https://salsa.debian.org/multimedia-team/celluloid
+
+Package: celluloid
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: youtube-dl
+Replaces: gnome-mpv (<< 0.17-1~)
+Breaks: gnome-mpv (<< 0.17-1~)
+Description: simple GTK+ frontend for mpv
+ GNOME MPV is a simple GTK+ frontend for mpv. GNOME MPV interacts with mpv via
+ the client API exported by libmpv, allowing access to mpv's powerful playback
+ capabilities.
+
+Package: gnome-mpv
+Depends: celluloid, ${misc:Depends}
+Architecture: all
+Priority: optional
+Section: oldlibs
+Description: transitional package
+ This is a transitional package. It can safely be removed.
