@@ -2,3 +2,4 @@ relax-gettext-version.patch
 fix-makefile.patch
 gooroom-fix-shortcut-issue.patch
 gooroom-fix-image-filter-issue.patch
+gooroom-fixed-video-size-adjustment-issues.patch
