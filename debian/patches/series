@@ -1,2 +1,3 @@
 relax-gettext-version.patch
 fix-makefile.patch
+gooroom-fix-shortcut-issue.patch
