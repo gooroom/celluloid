@@ -1,0 +1,19 @@
+diff --git a/src/celluloid-player.c b/src/celluloid-player.c
+index 501c427..4da88f5 100644
+--- a/src/celluloid-player.c
++++ b/src/celluloid-player.c
+@@ -252,6 +252,14 @@ mpv_event_notify(CelluloidMpv *mpv, gint event_id, gpointer event_data)
+ 	}
+ 	else if(event_id == MPV_EVENT_END_FILE)
+ 	{
++		mpv_event_end_file *event = event_data;
++
++		if(event->reason == MPV_END_FILE_REASON_ERROR)
++		{
++			priv->playlist->len = 0;
++			g_debug("Failed to fetch metadata");
++		}
++
+ 		if(priv->loaded)
+ 		{
+ 			priv->new_file = FALSE;
