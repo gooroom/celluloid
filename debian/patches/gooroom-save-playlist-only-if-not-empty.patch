@@ -1,0 +1,31 @@
+diff --git a/src/celluloid-view.c b/src/celluloid-view.c
+index e16b570..2626b96 100644
+--- a/src/celluloid-view.c
++++ b/src/celluloid-view.c
+@@ -1522,11 +1522,26 @@ celluloid_view_show_open_subtitle_track_dialog(CelluloidView *view)
+ void
+ celluloid_view_show_save_playlist_dialog(CelluloidView *view)
+ {
++	CelluloidMainWindow *wnd = CELLULOID_MAIN_WINDOW(view);
++	CelluloidPlaylistWidget *wgt = celluloid_main_window_get_playlist(wnd);
++	GPtrArray *playlist = celluloid_playlist_widget_get_contents(wgt);
++
+ 	GFile *dest_file;
+ 	CelluloidFileChooser *file_chooser;
+ 	GtkFileChooser *gtk_chooser;
+ 	GError *error;
+ 
++	if(playlist->len == 0)
++	{
++		show_message_dialog(view,
++			GTK_MESSAGE_ERROR,
++			_("Error"),
++			NULL,
++			_("Cannot save an empty playlist") );
++
++		return;
++	}
++
+ 	dest_file = NULL;
+ 	file_chooser =	celluloid_file_chooser_new
+ 			(	_("Save Playlist"),
