@@ -1,0 +1,47 @@
+diff --git a/src/celluloid-def.h b/src/celluloid-def.h
+index 5f6ee3c..2a8a46b 100644
+--- a/src/celluloid-def.h
++++ b/src/celluloid-def.h
+@@ -42,6 +42,8 @@
+ #define WAYLAND_NOCSD_HEIGHT_OFFSET 60
+ #define MAIN_WINDOW_DEFAULT_WIDTH 625
+ #define MAIN_WINDOW_DEFAULT_HEIGHT 400
++#define MAIN_WINDOW_MIN_WIDTH 440
++#define MAIN_WINDOW_MIN_HEIGHT 350
+ #define SEEK_BAR_UPDATE_INTERVAL 250
+ #define FS_CONTROL_HIDE_DELAY 1
+ #define KEYSTRING_MAX_LEN 16
+diff --git a/src/celluloid-main-window.c b/src/celluloid-main-window.c
+index 5b46889..2711eea 100644
+--- a/src/celluloid-main-window.c
++++ b/src/celluloid-main-window.c
+@@ -286,6 +286,7 @@ celluloid_main_window_init(CelluloidMainWindow *wnd)
+ {
+ 	CelluloidMainWindowPrivate *priv = get_private(wnd);
+ 	CelluloidControlBox *vid_area_control_box = NULL;
++	GdkGeometry hints;
+ 
+ 	priv->csd = FALSE;
+ 	priv->always_floating = FALSE;
+@@ -307,6 +308,9 @@ celluloid_main_window_init(CelluloidMainWindow *wnd)
+ 	priv->width_offset = 0;
+ 	priv->height_offset = 0;
+ 
++	hints.min_width = MAIN_WINDOW_MIN_WIDTH;
++	hints.min_height = MAIN_WINDOW_MIN_HEIGHT;
++
+ 	vid_area_control_box =	celluloid_video_area_get_control_box
+ 				(CELLULOID_VIDEO_AREA(priv->vid_area));
+ 
+@@ -365,6 +369,11 @@ celluloid_main_window_init(CelluloidMainWindow *wnd)
+ 				MAIN_WINDOW_DEFAULT_WIDTH
+ 				-PLAYLIST_DEFAULT_WIDTH );
+ 
++	gtk_window_set_geometry_hints(	GTK_WINDOW(wnd),
++					GTK_WIDGET(wnd),
++					&hints,
++					GDK_HINT_MIN_SIZE);
++
+ 	gtk_window_set_default_size(	GTK_WINDOW(wnd),
+ 					MAIN_WINDOW_DEFAULT_WIDTH,
+ 					MAIN_WINDOW_DEFAULT_HEIGHT );
