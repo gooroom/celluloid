@@ -1,0 +1,237 @@
+diff --git a/src/celluloid-menu.c b/src/celluloid-menu.c
+index 6791a40..9108b0c 100644
+--- a/src/celluloid-menu.c
++++ b/src/celluloid-menu.c
+@@ -27,8 +27,8 @@
+ 
+ static void
+ split_track_list(	const GPtrArray *track_list,
+-			GPtrArray **audio_tracks,
+-			GPtrArray **video_tracks,
++//			GPtrArray **audio_tracks,
++//			GPtrArray **video_tracks,
+ 			GPtrArray **subtitle_tracks );
+ 
+ static GMenu *
+@@ -36,11 +36,11 @@ build_menu_from_track_list(	const GPtrArray *list,
+ 				const gchar *action,
+ 				const gchar *load_action );
+ 
+-static GMenu *
+-build_video_track_menu(const GPtrArray *list);
+-
+-static GMenu *
+-build_audio_track_menu(const GPtrArray *list);
++//static GMenu *
++//build_video_track_menu(const GPtrArray *list);
++//
++//static GMenu *
++//build_audio_track_menu(const GPtrArray *list);
+ 
+ static GMenu *
+ build_subtitle_track_menu(const GPtrArray *list);
+@@ -50,19 +50,19 @@ build_disc_menu(const GPtrArray *disc_list);
+ 
+ static void
+ split_track_list(	const GPtrArray *track_list,
+-			GPtrArray **audio_tracks,
+-			GPtrArray **video_tracks,
++//			GPtrArray **audio_tracks,
++//			GPtrArray **video_tracks,
+ 			GPtrArray **subtitle_tracks )
+ {
+ 	guint track_list_len = track_list?track_list->len:0;
+ 
+-	g_assert(audio_tracks && video_tracks && subtitle_tracks);
++	g_assert(/*audio_tracks && video_tracks && */subtitle_tracks);
+ 
+ 	/* The contents of these array are shallow-copied from track_list and
+ 	 * therefore only the container should be freed.
+ 	 */
+-	*audio_tracks = g_ptr_array_new();
+-	*video_tracks = g_ptr_array_new();
++//	*audio_tracks = g_ptr_array_new();
++//	*video_tracks = g_ptr_array_new();
+ 	*subtitle_tracks = g_ptr_array_new();
+ 
+ 	for(guint i = 0; i < track_list_len; i++)
+@@ -71,21 +71,21 @@ split_track_list(	const GPtrArray *track_list,
+ 
+ 		switch(track->type)
+ 		{
+-			case TRACK_TYPE_AUDIO:
+-			g_ptr_array_add(*audio_tracks, track);
+-			break;
+-
+-			case TRACK_TYPE_VIDEO:
+-			g_ptr_array_add(*video_tracks, track);
+-			break;
++//			case TRACK_TYPE_AUDIO:
++//			g_ptr_array_add(*audio_tracks, track);
++//			break;
++//
++//			case TRACK_TYPE_VIDEO:
++//			g_ptr_array_add(*video_tracks, track);
++//			break;
+ 
+ 			case TRACK_TYPE_SUBTITLE:
+ 			g_ptr_array_add(*subtitle_tracks, track);
+ 			break;
+ 
+-			default:
+-			g_assert_not_reached();
+-			break;
++//			default:
++//			g_assert_not_reached();
++//			break;
+ 		}
+ 	}
+ }
+@@ -157,23 +157,23 @@ build_menu_from_track_list(	const GPtrArray *list,
+ 	return menu;
+ }
+ 
+-static GMenu *
+-build_video_track_menu(const GPtrArray *list)
+-{
+-	return	build_menu_from_track_list
+-		(	list,
+-			"win.set-video-track",
+-			"win.load-track('video-add')" );
+-}
+-
+-static GMenu *
+-build_audio_track_menu(const GPtrArray *list)
+-{
+-	return	build_menu_from_track_list
+-		(	list,
+-			"win.set-audio-track",
+-			"win.load-track('audio-add')" );
+-}
++//static GMenu *
++//build_video_track_menu(const GPtrArray *list)
++//{
++//	return	build_menu_from_track_list
++//		(	list,
++//			"win.set-video-track",
++//			"win.load-track('video-add')" );
++//}
++//
++//static GMenu *
++//build_audio_track_menu(const GPtrArray *list)
++//{
++//	return	build_menu_from_track_list
++//		(	list,
++//			"win.set-audio-track",
++//			"win.load-track('audio-add')" );
++//}
+ 
+ static GMenu *
+ build_subtitle_track_menu(const GPtrArray *list)
+@@ -215,19 +215,19 @@ celluloid_menu_build_full(	GMenu *menu,
+ 				const GPtrArray *track_list,
+ 				const GPtrArray *disc_list )
+ {
+-	GPtrArray *audio_tracks = NULL;
+-	GPtrArray *video_tracks = NULL;
++//	GPtrArray *audio_tracks = NULL;
++//	GPtrArray *video_tracks = NULL;
+ 	GPtrArray *subtitle_tracks = NULL;
+-	GMenu *video_menu = NULL;
+-	GMenu *audio_menu = NULL;
++//	GMenu *video_menu = NULL;
++//	GMenu *audio_menu = NULL;
+ 	GMenu *subtitle_menu = NULL;
+ 	GMenu *disc_menu = NULL;
+ 
+ 	split_track_list
+-		(track_list, &audio_tracks, &video_tracks, &subtitle_tracks);
++		(track_list, /*&audio_tracks, &video_tracks,*/ &subtitle_tracks);
+ 
+-	video_menu = build_video_track_menu(video_tracks);
+-	audio_menu = build_audio_track_menu(audio_tracks);
++//	video_menu = build_video_track_menu(video_tracks);
++//	audio_menu = build_audio_track_menu(audio_tracks);
+ 	subtitle_menu = build_subtitle_track_menu(subtitle_tracks);
+ 	disc_menu = build_disc_menu(disc_list);
+ 
+@@ -242,8 +242,8 @@ celluloid_menu_build_full(	GMenu *menu,
+ 			CELLULOID_MENU_ITEM(_("_Quit"), "win.quit"),
+ 			CELLULOID_MENU_SUBMENU(_("_Edit"), NULL),
+ 			CELLULOID_MENU_ITEM(_("_Preferences"), "win.show-preferences-dialog"),
+-			CELLULOID_MENU_SUBMENU(_("_Video Track"), video_menu),
+-			CELLULOID_MENU_SUBMENU(_("_Audio Track"), audio_menu),
++//			CELLULOID_MENU_SUBMENU(_("_Video Track"), video_menu),
++//			CELLULOID_MENU_SUBMENU(_("_Audio Track"), audio_menu),
+ 			CELLULOID_MENU_SUBMENU(_("S_ubtitle Track"), subtitle_menu),
+ 			CELLULOID_MENU_SUBMENU(_("_View"), NULL),
+ 			CELLULOID_MENU_ITEM(_("_Toggle Controls"), "win.toggle-controls"),
+@@ -256,11 +256,11 @@ celluloid_menu_build_full(	GMenu *menu,
+ 
+ 	celluloid_menu_build_menu(menu, entries, FALSE);
+ 
+-	g_ptr_array_free(audio_tracks, FALSE);
+-	g_ptr_array_free(video_tracks, FALSE);
++//	g_ptr_array_free(audio_tracks, FALSE);
++//	g_ptr_array_free(video_tracks, FALSE);
+ 	g_ptr_array_free(subtitle_tracks, FALSE);
+-	g_object_unref(video_menu);
+-	g_object_unref(audio_menu);
++//	g_object_unref(video_menu);
++//	g_object_unref(audio_menu);
+ 	g_object_unref(subtitle_menu);
+ 	g_object_unref(disc_menu);
+ }
+@@ -268,18 +268,18 @@ celluloid_menu_build_full(	GMenu *menu,
+ void
+ celluloid_menu_build_menu_btn(GMenu *menu, const GPtrArray *track_list)
+ {
+-	GPtrArray *audio_tracks = NULL;
+-	GPtrArray *video_tracks = NULL;
++//	GPtrArray *audio_tracks = NULL;
++//	GPtrArray *video_tracks = NULL;
+ 	GPtrArray *subtitle_tracks = NULL;
+-	GMenu *video_menu = NULL;
+-	GMenu *audio_menu = NULL;
++//	GMenu *video_menu = NULL;
++//	GMenu *audio_menu = NULL;
+ 	GMenu *subtitle_menu = NULL;
+ 
+ 	split_track_list
+-		(track_list, &audio_tracks, &video_tracks, &subtitle_tracks);
++		(track_list, /*&audio_tracks, &video_tracks,*/ &subtitle_tracks);
+ 
+-	video_menu = build_video_track_menu(video_tracks);
+-	audio_menu = build_audio_track_menu(audio_tracks);
++//	video_menu = build_video_track_menu(video_tracks);
++//	audio_menu = build_audio_track_menu(audio_tracks);
+ 	subtitle_menu = build_subtitle_track_menu(subtitle_tracks);
+ 
+ 	const CelluloidMenuEntry entries[]
+@@ -289,8 +289,8 @@ celluloid_menu_build_menu_btn(GMenu *menu, const GPtrArray *track_list)
+ 			CELLULOID_MENU_ITEM(_("_Toggle Playlist"), "win.toggle-playlist"),
+ 			CELLULOID_MENU_ITEM(_("_Save Playlist"), "win.save-playlist"),
+ 			CELLULOID_MENU_SEPARATOR,
+-			CELLULOID_MENU_SUBMENU(_("_Video Track"), video_menu),
+-			CELLULOID_MENU_SUBMENU(_("_Audio Track"), audio_menu),
++//			CELLULOID_MENU_SUBMENU(_("_Video Track"), video_menu),
++//			CELLULOID_MENU_SUBMENU(_("_Audio Track"), audio_menu),
+ 			CELLULOID_MENU_SUBMENU(_("S_ubtitle Track"), subtitle_menu),
+ 			CELLULOID_MENU_SEPARATOR,
+ 			CELLULOID_MENU_ITEM(_("_Preferences"), "win.show-preferences-dialog"),
+@@ -300,11 +300,11 @@ celluloid_menu_build_menu_btn(GMenu *menu, const GPtrArray *track_list)
+ 
+ 	celluloid_menu_build_menu(menu, entries, TRUE);
+ 
+-	g_ptr_array_free(audio_tracks, FALSE);
+-	g_ptr_array_free(video_tracks, FALSE);
++//	g_ptr_array_free(audio_tracks, FALSE);
++//	g_ptr_array_free(video_tracks, FALSE);
+ 	g_ptr_array_free(subtitle_tracks, FALSE);
+-	g_object_unref(video_menu);
+-	g_object_unref(audio_menu);
++//	g_object_unref(video_menu);
++//	g_object_unref(audio_menu);
+ 	g_object_unref(subtitle_menu);
+ }
+ 

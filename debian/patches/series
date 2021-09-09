@@ -3,3 +3,4 @@ fix-makefile.patch
 gooroom-fix-shortcut-issue.patch
 gooroom-fix-image-filter-issue.patch
 gooroom-fixed-video-size-adjustment-issues.patch
+gooroom-removed-audio-video-menu.patch
