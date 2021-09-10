@@ -7,3 +7,4 @@ gooroom-removed-audio-video-menu.patch
 gooroom-save-playlist-only-if-not-empty.patch
 gooroom-set-min-window-size.patch
 gooroom-fixed-end-file-reason-error.patch
+gooroom-created-korean-po.patch
