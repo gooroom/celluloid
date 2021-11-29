@@ -1,0 +1,22 @@
+diff --git a/src/mpris/celluloid-mpris-module.c b/src/mpris/celluloid-mpris-module.c
+index 677c8a0..287f6e0 100644
+--- a/src/mpris/celluloid-mpris-module.c
++++ b/src/mpris/celluloid-mpris-module.c
+@@ -255,6 +255,8 @@ celluloid_mpris_module_get_properties(CelluloidMprisModule *module, ...)
+ 	{
+ 		*value_ptr = g_hash_table_lookup(priv->prop_table, name);
+ 	}
++
++	va_end(arg);
+ }
+ 
+ void
+@@ -311,6 +313,8 @@ celluloid_mpris_module_set_properties_full(	CelluloidMprisModule *module,
+ 			"PropertiesChanged",
+ 			sig_args,
+ 			NULL );
++
++	va_end(arg);
+ }
+ 
+ void
