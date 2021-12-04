@@ -1,3 +1,18 @@
+celluloid (0.20-2+grm3u1) unstable; urgency=medium
+
+  [ subin.kim ]
+  * [57f6ea31] Added patch regarding shortcuts
+  * [e3c0c4cf] [Bug:1333] Fixed image filter error
+  * [a184f7a0] [Bug:1345-1347,2017,2021,2507] Fixed video size adjustment issues
+  * [22f782fc] [Bug:1705,1369,1340,1376,2104,2108] Removed video/audio track menu
+  * [779e4bfd] [Bug:2072] Save playlist only if not empty
+  * [092b1f98] [Bug:3066] Set minimum window size
+  * [916f38ba] [Bug:3093] Fixed reoccuring alert error message appears once
+  * [b1173cbc] Generated korean po file
+  * [9234067d] Fixed static code analysis issue
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Sat, 04 Dec 2021 17:31:28 +0900
+
 celluloid (0.20-2) unstable; urgency=medium
 
   * Fix FTBFS on ppc64el due to confusion over Makefile :/&: syntax.
