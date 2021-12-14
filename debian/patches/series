@@ -9,3 +9,4 @@ gooroom-set-min-window-size.patch
 gooroom-fixed-end-file-reason-error.patch
 gooroom-created-korean-po.patch
 gooroom-fixed-static-code-analysis-issue.patch
+gooroom-removed-application-name.patch

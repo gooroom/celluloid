@@ -1,0 +1,13 @@
+diff --git a/src/celluloid-application.c b/src/celluloid-application.c
+index 119642b..85fd70b 100644
+--- a/src/celluloid-application.c
++++ b/src/celluloid-application.c
+@@ -448,7 +448,7 @@ command_line_handler(	GApplication *gapp,
+ static void
+ startup_handler(GApplication *gapp, gpointer data)
+ {
+-	g_set_application_name(_("Celluloid"));
++	g_set_application_name(_(""));
+ 	gtk_window_set_default_icon_name(ICON_NAME);
+ 
+ 	bindtextdomain(GETTEXT_PACKAGE, PACKAGE_LOCALEDIR);
