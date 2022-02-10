@@ -1,0 +1,172 @@
+diff --git a/src/celluloid-controller-actions.c b/src/celluloid-controller-actions.c
+index ad8284f..4a30082 100644
+--- a/src/celluloid-controller-actions.c
++++ b/src/celluloid-controller-actions.c
+@@ -24,6 +24,8 @@
+ #include "celluloid-file-chooser.h"
+ #include "celluloid-common.h"
+ 
++#define GOOROOM_YELP_ADJUST_MENTS "/usr/share/gooroom-yelp-adjustments"
++
+ static gboolean
+ boolean_to_state(	GBinding *binding,
+ 		const GValue *from_value,
+@@ -153,6 +155,11 @@ show_about_dialog_handler(	GSimpleAction *action,
+ 				GVariant *param,
+ 				gpointer data );
+ 
++static void
++show_help_dialog_handler(	GSimpleAction *action,
++				GVariant *param,
++				gpointer data );
++
+ static gboolean
+ boolean_to_state(	GBinding *binding,
+ 		const GValue *from_value,
+@@ -540,6 +547,12 @@ show_about_dialog_handler(GSimpleAction *action, GVariant *param, gpointer data)
+ 	celluloid_view_show_about_dialog(celluloid_controller_get_view(data));
+ }
+ 
++static void
++show_help_dialog_handler(GSimpleAction *action, GVariant *param, gpointer data)
++{
++	celluloid_view_show_help_dialog(celluloid_controller_get_view(data));
++}
++
+ void
+ celluloid_controller_action_register_actions(CelluloidController *controller)
+ {
+@@ -554,6 +567,8 @@ celluloid_controller_action_register_actions(CelluloidController *controller)
+ 			.activate = quit_handler},
+ 			{.name = "show-about-dialog",
+ 			.activate = show_about_dialog_handler},
++			{.name = "show-help-dialog",
++			.activate = show_help_dialog_handler},
+ 			{.name = "show-preferences-dialog",
+ 			.activate = show_preferences_dialog_handler},
+ 			{.name = "show-open-location-dialog",
+@@ -617,5 +632,10 @@ celluloid_controller_action_register_actions(CelluloidController *controller)
+ 						G_N_ELEMENTS(entries),
+ 						controller );
+ 
++	/* For help ation flexible */
++	if (!g_file_test (GOOROOM_YELP_ADJUST_MENTS, G_FILE_TEST_EXISTS)){
++		g_action_map_remove_action (G_ACTION_MAP(window),"show-help-dialog");
++	}
++
+ 	bind_properties(controller);
+ }
+diff --git a/src/celluloid-def.h b/src/celluloid-def.h
+index edba42f..249c817 100644
+--- a/src/celluloid-def.h
++++ b/src/celluloid-def.h
+@@ -101,6 +101,7 @@
+ 		"Ctrl+? script-message celluloid-action win.show-shortcuts-dialog",\
+ 		"Ctrl+p script-message celluloid-action win.show-preferences-dialog",\
+ 		"Ctrl+h script-message celluloid-action win.toggle-controls",\
++		"F1 script-message celluloid-action win.show-help-dialog",\
+ 		"F9 script-message celluloid-action win.toggle-playlist",\
+ 		"DEL script-message celluloid-action win.remove-selected-playlist-item",\
+ 		"U stop",\
+diff --git a/src/celluloid-menu.c b/src/celluloid-menu.c
+index 9108b0c..4bd016d 100644
+--- a/src/celluloid-menu.c
++++ b/src/celluloid-menu.c
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2015-2020 gnome-mpv
++ * Copyright (c) 2021-2022 goorooom
+  *
+  * This file is part of Celluloid.
+  *
+@@ -25,6 +26,8 @@
+ #include "celluloid-menu.h"
+ #include "celluloid-common.h"
+ 
++#define GOOROOM_YELP_ADJUSTMENTS "/usr/share/gooroom-yelp-adjustments"
++
+ static void
+ split_track_list(	const GPtrArray *track_list,
+ //			GPtrArray **audio_tracks,
+@@ -231,7 +234,7 @@ celluloid_menu_build_full(	GMenu *menu,
+ 	subtitle_menu = build_subtitle_track_menu(subtitle_tracks);
+ 	disc_menu = build_disc_menu(disc_list);
+ 
+-	const CelluloidMenuEntry entries[]
++	CelluloidMenuEntry entries[]
+ 		= {	CELLULOID_MENU_SUBMENU(_("_File"), NULL),
+ 			CELLULOID_MENU_ITEM(_("_Open…"), "win.show-open-dialog((false, false))"),
+ 			CELLULOID_MENU_ITEM(_("Open _Folder…"), "win.show-open-dialog((true, false))"),
+@@ -249,11 +252,17 @@ celluloid_menu_build_full(	GMenu *menu,
+ 			CELLULOID_MENU_ITEM(_("_Toggle Controls"), "win.toggle-controls"),
+ 			CELLULOID_MENU_ITEM(_("_Toggle Playlist"), "win.toggle-playlist"),
+ 			CELLULOID_MENU_ITEM(_("_Fullscreen"), "win.toggle-fullscreen"),
+-			CELLULOID_MENU_SUBMENU(_("_Help"), NULL),
++//			CELLULOID_MENU_SUBMENU(_("_Help"), NULL),
+ 			CELLULOID_MENU_ITEM(_("_Keyboard Shortcuts"), "win.show-shortcuts-dialog"),
+ 			CELLULOID_MENU_ITEM(_("_About Celluloid"), "win.show-about-dialog"),
++			CELLULOID_MENU_ITEM(_("_Help"), "win.show-help-dialog"),
+ 			CELLULOID_MENU_END };
+ 
++	/* For help menu flexible */
++	if (!g_file_test(GOOROOM_YELP_ADJUSTMENTS, G_FILE_TEST_EXISTS)){
++		entries[17].action = NULL;
++	}
++
+ 	celluloid_menu_build_menu(menu, entries, FALSE);
+ 
+ //	g_ptr_array_free(audio_tracks, FALSE);
+@@ -296,6 +305,7 @@ celluloid_menu_build_menu_btn(GMenu *menu, const GPtrArray *track_list)
+ 			CELLULOID_MENU_ITEM(_("_Preferences"), "win.show-preferences-dialog"),
+ 			CELLULOID_MENU_ITEM(_("_Keyboard Shortcuts"), "win.show-shortcuts-dialog"),
+ 			CELLULOID_MENU_ITEM(_("_About Celluloid"), "win.show-about-dialog"),
++			CELLULOID_MENU_ITEM(_("_Help"), "win.show-help-dialog"),
+ 			CELLULOID_MENU_END };
+ 
+ 	celluloid_menu_build_menu(menu, entries, TRUE);
+diff --git a/src/celluloid-shortcuts-window.c b/src/celluloid-shortcuts-window.c
+index 6257fb9..e27266b 100644
+--- a/src/celluloid-shortcuts-window.c
++++ b/src/celluloid-shortcuts-window.c
+@@ -60,6 +60,7 @@ celluloid_shortcuts_window_init(CelluloidShortcutsWindow *wnd)
+ 			{"<Ctrl><Shift>l", _("Add location to playlist")},
+ 			{"<Ctrl>p", _("Show preferences dialog")},
+ 			{"<Ctrl>h", _("Toggle controls")},
++			{"F1", _("Help")},
+ 			{"F9", _("Toggle playlist")},
+ 			{"F11 f", _("Toggle fullscreen mode")},
+ 			{"Escape", _("Leave fullscreen mode")},
+diff --git a/src/celluloid-view.c b/src/celluloid-view.c
+index ca5b96d..cd27a8d 100644
+--- a/src/celluloid-view.c
++++ b/src/celluloid-view.c
+@@ -1636,6 +1636,15 @@ celluloid_view_show_about_dialog(CelluloidView *view)
+ 				NULL );
+ }
+ 
++void celluloid_view_show_help_dialog(CelluloidView *view)
++{
++	CelluloidMainWindow *wnd =
++		CELLULOID_MAIN_WINDOW(view);
++
++    gtk_show_uri_on_window (GTK_WINDOW(wnd), "help:gooroom-help-gnome-mpv",
++                            gtk_get_current_event_time (),NULL);
++}
++
+ void
+ celluloid_view_show_message_dialog(	CelluloidView *view,
+ 					GtkMessageType type,
+diff --git a/src/celluloid-view.h b/src/celluloid-view.h
+index 8174c88..276c924 100644
+--- a/src/celluloid-view.h
++++ b/src/celluloid-view.h
+@@ -65,6 +65,9 @@ celluloid_view_show_shortcuts_dialog(CelluloidView *view);
+ void
+ celluloid_view_show_about_dialog(CelluloidView *view);
+ 
++void
++celluloid_view_show_help_dialog(CelluloidView *view);
++
+ void
+ celluloid_view_show_message_dialog(	CelluloidView *view,
+ 					GtkMessageType type,
