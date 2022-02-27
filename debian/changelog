@@ -1,3 +1,12 @@
+celluloid (0.20-2+grm3u2) unstable; urgency=medium
+
+  [ subin.kim ]
+  * [1bc4f96b] [Bug:3941]Removed application name
+  * [93ba9039] Flexible help menu added
+  * [dc4b646a] [Bug:4708] Made pref dialog unresizable
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Mon, 28 Feb 2022 07:54:57 +0900
+
 celluloid (0.20-2+grm3u1) unstable; urgency=medium
 
   [ subin.kim ]
