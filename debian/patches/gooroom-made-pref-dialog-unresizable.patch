@@ -1,0 +1,12 @@
+diff --git a/src/celluloid-view.c b/src/celluloid-view.c
+index cd27a8d..cdd47d0 100644
+--- a/src/celluloid-view.c
++++ b/src/celluloid-view.c
+@@ -1599,6 +1599,7 @@ celluloid_view_show_preferences_dialog(CelluloidView *view)
+ 				"response",
+ 				G_CALLBACK(preferences_dialog_response_handler),
+ 				view );
++	gtk_window_set_resizable (GTK_WINDOW (dialog), FALSE);
+ 
+ 	gtk_widget_show_all(dialog);
+ }
