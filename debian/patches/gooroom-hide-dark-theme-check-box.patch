@@ -1,0 +1,17 @@
+diff --git a/src/celluloid-preferences-dialog.c b/src/celluloid-preferences-dialog.c
+index 39a8615..3ec6a00 100644
+--- a/src/celluloid-preferences-dialog.c
++++ b/src/celluloid-preferences-dialog.c
+@@ -307,9 +307,9 @@ celluloid_preferences_dialog_init(CelluloidPreferencesDialog *dlg)
+ 			{_("Enable client-side decorations"),
+ 			"csd-enable",
+ 			ITEM_TYPE_CHECK_BOX},
+-			{_("Enable dark theme"),
+-			"dark-theme-enable",
+-			ITEM_TYPE_CHECK_BOX},
++//			{_("Enable dark theme"),
++//			"dark-theme-enable",
++//			ITEM_TYPE_CHECK_BOX},
+ 			{_("Use floating controls in windowed mode"),
+ 			"always-use-floating-controls",
+ 			ITEM_TYPE_CHECK_BOX},
