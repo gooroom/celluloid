@@ -1,0 +1,17 @@
+diff --git a/src/celluloid-preferences-dialog.c b/src/celluloid-preferences-dialog.c
+index 3ec6a00..7657f07 100644
+--- a/src/celluloid-preferences-dialog.c
++++ b/src/celluloid-preferences-dialog.c
+@@ -304,9 +304,9 @@ celluloid_preferences_dialog_init(CelluloidPreferencesDialog *dlg)
+ 		= {	{_("Automatically resize window to fit video"),
+ 			"autofit-enable",
+ 			ITEM_TYPE_CHECK_BOX},
+-			{_("Enable client-side decorations"),
+-			"csd-enable",
+-			ITEM_TYPE_CHECK_BOX},
++//			{_("Enable client-side decorations"),
++//			"csd-enable",
++//			ITEM_TYPE_CHECK_BOX},
+ //			{_("Enable dark theme"),
+ //			"dark-theme-enable",
+ //			ITEM_TYPE_CHECK_BOX},
