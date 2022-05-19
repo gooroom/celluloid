@@ -1,0 +1,31 @@
+diff --git a/src/celluloid-preferences-dialog.c b/src/celluloid-preferences-dialog.c
+index 7657f07..0dea12a 100644
+--- a/src/celluloid-preferences-dialog.c
++++ b/src/celluloid-preferences-dialog.c
+@@ -364,11 +364,12 @@ celluloid_preferences_dialog_init(CelluloidPreferencesDialog *dlg)
+ 	GtkWidget *content_area;
+ 	GdkGeometry geom;
+ 
+-	/* This 'locks' the height of the dialog while allowing the width to be
++	/* If set 0, it 'locks' the height of the dialog while allowing the width to be
+ 	 * freely adjusted.
+ 	 */
+ 	geom.max_width = G_MAXINT;
+-	geom.max_height = 0;
++	geom.max_height = G_MAXINT;
++	//geom.max_height = 0;
+ 
+ 	dlg->settings = g_settings_new(CONFIG_ROOT);
+ 	dlg->notebook = gtk_notebook_new();
+diff --git a/src/celluloid-view.c b/src/celluloid-view.c
+index cdd47d0..cd27a8d 100644
+--- a/src/celluloid-view.c
++++ b/src/celluloid-view.c
+@@ -1599,7 +1599,6 @@ celluloid_view_show_preferences_dialog(CelluloidView *view)
+ 				"response",
+ 				G_CALLBACK(preferences_dialog_response_handler),
+ 				view );
+-	gtk_window_set_resizable (GTK_WINDOW (dialog), FALSE);
+ 
+ 	gtk_widget_show_all(dialog);
+ }
