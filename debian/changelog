@@ -1,3 +1,12 @@
+celluloid (0.20-2+grm3u3) unstable; urgency=medium
+
+  [ subin.kim ]
+  * [22916e59] [Bug:4709,5042] Hide dark-theme check box
+  * [9754374f] deleted csd deco option
+  * [efa67874] [Bug:4708] Made pref dialog resizable
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Thu, 26 May 2022 15:35:58 +0900
+
 celluloid (0.20-2+grm3u2) unstable; urgency=medium
 
   [ subin.kim ]
