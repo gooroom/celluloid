@@ -1,0 +1,23 @@
+diff --git a/src/celluloid-preferences-dialog.c b/src/celluloid-preferences-dialog.c
+index 0dea12a..0e17eaa 100644
+--- a/src/celluloid-preferences-dialog.c
++++ b/src/celluloid-preferences-dialog.c
+@@ -353,12 +353,12 @@ celluloid_preferences_dialog_init(CelluloidPreferencesDialog *dlg)
+ 			{_("Enable media keys support"),
+ 			"media-keys-enable",
+ 			ITEM_TYPE_CHECK_BOX},
+-			{_("Extra MPV options:"),
+-			NULL,
+-			ITEM_TYPE_LABEL},
+-			{NULL,
+-			"mpv-options",
+-			ITEM_TYPE_TEXT_BOX},
++//			{_("Extra MPV options:"),
++//			NULL,
++//			ITEM_TYPE_LABEL},
++//			{NULL,
++//			"mpv-options",
++//			ITEM_TYPE_TEXT_BOX},
+ 			{NULL, NULL, ITEM_TYPE_INVALID} };
+ 
+ 	GtkWidget *content_area;
