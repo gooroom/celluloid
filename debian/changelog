@@ -1,3 +1,10 @@
+celluloid (0.20-2+grm3u4) unstable; urgency=medium
+
+  [ subin.kim ]
+  * [fc8ceed1] [Bug:5153,4316] Removed extra mpv options area
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Mon, 20 Jun 2022 08:23:47 +0900
+
 celluloid (0.20-2+grm3u3) unstable; urgency=medium
 
   [ subin.kim ]
