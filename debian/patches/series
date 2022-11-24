@@ -17,3 +17,4 @@ gooroom-csd-deco-option.patch
 gooroom-made-pref-dialog-resizable.patch
 gooroom-hide-extra-mpv-options.patch
 gooroom-cleared-open-loc-entry.patch
+gooroom-fixed-opengl-request-bad-window.patch
