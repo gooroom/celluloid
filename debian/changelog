@@ -1,3 +1,10 @@
+celluloid (0.20-2+grm4u1) unstable; urgency=medium
+
+  [ jongkyung.woo ]
+  * [e0067019] Rebuild on gooroom-4.0
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Mon, 11 Mar 2024 18:18:51 +0900
+
 celluloid (0.20-2+grm3u6) unstable; urgency=medium
 
   [ boyeon.choi ]
