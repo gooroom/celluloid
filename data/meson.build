@@ -1,7 +1,6 @@
 
 schemadir = join_paths(get_option('datadir'), 'glib-2.0/schemas')
 install_data([
-  'io.github.GnomeMpv.gschema.xml',
   'io.github.celluloid_player.Celluloid.gschema.xml',
 ], install_dir: schemadir)
 
@@ -57,3 +56,6 @@ if glib_compile_schemas.found()
     args: ['--strict', '--dry-run', meson.current_source_dir()]
   )
 endif
+
+# Compile schemas for devenv etc.
+gnome.compile_schemas()

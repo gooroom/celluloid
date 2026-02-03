@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2020 gnome-mpv
+ * Copyright (c) 2014-2025 gnome-mpv
  *
  * This file is part of Celluloid.
  *
@@ -22,8 +22,10 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <glib/gi18n.h>
+#include <adwaita.h>
 
 #include "celluloid-preferences-dialog.h"
+#include "celluloid-file-chooser-button.h"
 #include "celluloid-plugins-manager.h"
 #include "celluloid-main-window.h"
 #include "celluloid-def.h"
@@ -31,25 +33,31 @@
 typedef struct PreferencesDialogItem PreferencesDialogItem;
 typedef enum PreferencesDialogItemType PreferencesDialogItemType;
 
+enum
+{
+	PROP_0,
+	PROP_PARENT,
+	N_PROPERTIES
+};
+
 struct _CelluloidPreferencesDialog
 {
-	GtkDialog parent_instance;
+	AdwPreferencesDialog parent_instance;
 	GSettings *settings;
-	GtkWidget *notebook;
+	gboolean needs_mpv_reset;
+	GtkWindow *parent;
 };
 
 struct _CelluloidPreferencesDialogClass
 {
-	GtkDialogClass parent_class;
+	AdwPreferencesDialogClass parent_class;
 };
 
 enum PreferencesDialogItemType
 {
 	ITEM_TYPE_INVALID,
-	ITEM_TYPE_GROUP,
-	ITEM_TYPE_CHECK_BOX,
+	ITEM_TYPE_SWITCH,
 	ITEM_TYPE_FILE_CHOOSER,
-	ITEM_TYPE_LABEL,
 	ITEM_TYPE_TEXT_BOX
 };
 
@@ -60,60 +68,252 @@ struct PreferencesDialogItem
 	PreferencesDialogItemType type;
 };
 
-G_DEFINE_TYPE(CelluloidPreferencesDialog, celluloid_preferences_dialog, GTK_TYPE_DIALOG)
+G_DEFINE_TYPE(CelluloidPreferencesDialog, celluloid_preferences_dialog, ADW_TYPE_PREFERENCES_DIALOG)
 
 static void
-file_set_handler(GtkFileChooserButton *widget, gpointer data)
+set_property(	GObject *object,
+		guint property_id,
+		const GValue *value,
+		GParamSpec *pspec );
+
+static void
+get_property(	GObject *object,
+		guint property_id,
+		GValue *value,
+		GParamSpec *pspec );
+
+static void
+constructed(GObject *object);
+
+static void
+file_set_handler(CelluloidFileChooserButton *button, gpointer data);
+
+static void
+handle_changed(GSettings *settings, const gchar *key, gpointer data);
+
+static void
+handle_plugins_manager_error(	CelluloidPluginsManager *pmgr,
+				const gchar *message,
+				gpointer data );
+
+static gboolean
+save_settings(AdwPreferencesDialog *dialog);
+
+static void
+free_signal_data(gpointer data, GClosure *closure);
+
+static GtkWidget *
+build_page(	const PreferencesDialogItem *items,
+		GSettings *settings,
+		const char *title,
+		const char *icon_name );
+
+static void
+finalize(GObject *object);
+
+static void
+set_property(	GObject *object,
+		guint property_id,
+		const GValue *value,
+		GParamSpec *pspec )
 {
-	GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(widget));
-	CelluloidPreferencesDialog *dlg = CELLULOID_PREFERENCES_DIALOG(toplevel);
-	GtkFileChooser *chooser = GTK_FILE_CHOOSER(widget);
-	const gchar *key = data;
-	gchar *filename = gtk_file_chooser_get_filename(chooser)?:g_strdup("");
+	CelluloidPreferencesDialog *self = CELLULOID_PREFERENCES_DIALOG(object);
 
-	g_settings_set_string(dlg->settings, key, filename);
+	switch(property_id)
+	{
+		case PROP_PARENT:
+		self->parent = g_value_get_pointer(value);
+		break;
 
-	g_free(filename);
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		break;
+	}
 }
 
 static void
-response_handler(GtkDialog *dialog, gint response_id)
+get_property(	GObject *object,
+		guint property_id,
+		GValue *value,
+		GParamSpec *pspec )
 {
-	CelluloidPreferencesDialog *dlg = CELLULOID_PREFERENCES_DIALOG(dialog);
+	CelluloidPreferencesDialog *self = CELLULOID_PREFERENCES_DIALOG(object);
 
-	if(response_id == GTK_RESPONSE_ACCEPT)
+	switch(property_id)
 	{
-		g_settings_apply(dlg->settings);
-	}
-	else
-	{
-		g_settings_revert(dlg->settings);
-	}
+		case PROP_PARENT:
+		g_value_set_pointer(value, self->parent);
+		break;
 
-	g_object_unref(dlg->settings);
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		break;
+	}
+}
+
+static void
+constructed(GObject *object)
+{
+	G_OBJECT_CLASS(celluloid_preferences_dialog_parent_class)->constructed(object);
+
+	CelluloidPreferencesDialog *dlg = CELLULOID_PREFERENCES_DIALOG(object);
+
+	const PreferencesDialogItem interface_items[]
+		= {	{NULL,
+			"autofit-enable",
+			ITEM_TYPE_SWITCH},
+			{NULL,
+			"csd-enable",
+			ITEM_TYPE_SWITCH},
+			{NULL,
+			"dark-theme-enable",
+			ITEM_TYPE_SWITCH},
+			{NULL,
+			"always-use-floating-controls",
+			ITEM_TYPE_SWITCH},
+			{NULL,
+			"draggable-video-area-enable",
+			ITEM_TYPE_SWITCH},
+			{NULL,
+			"always-autohide-cursor",
+			ITEM_TYPE_SWITCH},
+			{NULL,
+			"last-folder-enable",
+			ITEM_TYPE_SWITCH},
+			{NULL, NULL, ITEM_TYPE_INVALID} };
+	const PreferencesDialogItem config_items[]
+		= {	{NULL,
+			"mpv-config-enable",
+			ITEM_TYPE_SWITCH},
+			{_("mpv configuration file"),
+			"mpv-config-file",
+			ITEM_TYPE_FILE_CHOOSER},
+			{NULL,
+			"mpv-input-config-enable",
+			ITEM_TYPE_SWITCH},
+			{_("mpv input configuration file"),
+			"mpv-input-config-file",
+			ITEM_TYPE_FILE_CHOOSER},
+			{NULL, NULL, ITEM_TYPE_INVALID} };
+	const PreferencesDialogItem misc_items[]
+		= {	{NULL,
+			"always-open-new-window",
+			ITEM_TYPE_SWITCH},
+			{NULL,
+			"always-append-to-playlist",
+			ITEM_TYPE_SWITCH},
+			{NULL,
+			"ignore-playback-errors",
+			ITEM_TYPE_SWITCH},
+			{NULL,
+			"prefetch-metadata",
+			ITEM_TYPE_SWITCH},
+			{NULL,
+			"mpris-enable",
+			ITEM_TYPE_SWITCH},
+			{_("Extra mpv options"),
+			"mpv-options",
+			ITEM_TYPE_TEXT_BOX},
+			{NULL, NULL, ITEM_TYPE_INVALID} };
+
+	GtkWidget *page = NULL;
+
+	page = build_page
+		(	interface_items,
+			dlg->settings,
+			_("Interface"),
+			"applications-graphics-symbolic" );
+	adw_preferences_dialog_add(	ADW_PREFERENCES_DIALOG(dlg),
+					ADW_PREFERENCES_PAGE(page));
+
+	page = build_page
+		(	config_items,
+			dlg->settings,
+			_("Config Files"),
+			"document-properties-symbolic" );
+	adw_preferences_dialog_add(	ADW_PREFERENCES_DIALOG(dlg),
+					ADW_PREFERENCES_PAGE(page));
+
+	page = build_page
+		(	misc_items,
+			dlg->settings,
+			_("Miscellaneous"),
+			"preferences-other-symbolic" );
+	adw_preferences_dialog_add(	ADW_PREFERENCES_DIALOG(dlg),
+					ADW_PREFERENCES_PAGE(page));
+
+	AdwPreferencesPage *plugins_manager =
+		celluloid_plugins_manager_new(dlg->parent);
+
+	adw_preferences_dialog_add(	ADW_PREFERENCES_DIALOG(dlg),
+					plugins_manager );
+
+	g_signal_connect(	dlg,
+				"closed",
+				G_CALLBACK(save_settings),
+				NULL );
+	g_signal_connect(	dlg->settings,
+				"changed",
+				G_CALLBACK(handle_changed),
+				dlg );
+	g_signal_connect(	plugins_manager,
+				"error-raised",
+				G_CALLBACK(handle_plugins_manager_error),
+				dlg );
+}
+
+static void
+file_set_handler(CelluloidFileChooserButton *button, gpointer data)
+{
+	GtkRoot *root = gtk_widget_get_root(GTK_WIDGET(button));
+	CelluloidPreferencesDialog *self = CELLULOID_PREFERENCES_DIALOG(root);
+	const gchar *key = data;
+	GFile *file = celluloid_file_chooser_button_get_file(button);
+	gchar *uri = g_file_get_uri(file) ?: g_strdup("");
+
+	g_settings_set_string(self->settings, key, uri);
+
+	g_free(uri);
+	g_object_unref(file);
+}
+
+static void
+handle_changed(GSettings *settings, const gchar *key, gpointer data)
+{
+	CelluloidPreferencesDialog *dlg = CELLULOID_PREFERENCES_DIALOG(data);
+
+	dlg->needs_mpv_reset |= g_strcmp0(key, "mpv-config-enable") == 0;
+	dlg->needs_mpv_reset |= g_strcmp0(key, "mpv-config-file") == 0;
+	dlg->needs_mpv_reset |= g_strcmp0(key, "mpv-input-config-enable") == 0;
+	dlg->needs_mpv_reset |= g_strcmp0(key, "mpv-input-config-file") == 0;
+	dlg->needs_mpv_reset |= g_strcmp0(key, "mpv-options") == 0;
+}
+
+static void
+handle_plugins_manager_error(	CelluloidPluginsManager *pmgr,
+				const gchar *message,
+				gpointer data )
+{
+	CelluloidPreferencesDialog *dialog =
+		CELLULOID_PREFERENCES_DIALOG(data);
+
+	g_signal_emit_by_name(dialog, "error-raised", message);
 }
 
 static gboolean
-key_press_handler(GtkWidget *widget, GdkEventKey *event)
+save_settings(AdwPreferencesDialog *dialog)
 {
-	guint keyval = event->keyval;
-	guint state = event->state;
+	CelluloidPreferencesDialog *dlg = CELLULOID_PREFERENCES_DIALOG(dialog);
 
-	const guint mod_mask =	GDK_MODIFIER_MASK
-				&~(GDK_SHIFT_MASK
-				|GDK_LOCK_MASK
-				|GDK_MOD2_MASK
-				|GDK_MOD3_MASK
-				|GDK_MOD4_MASK
-				|GDK_MOD5_MASK);
+	g_settings_apply(dlg->settings);
 
-	if((state&mod_mask) == 0 && keyval == GDK_KEY_Return)
+	if(dlg->needs_mpv_reset)
 	{
-		gtk_dialog_response(GTK_DIALOG(widget), GTK_RESPONSE_ACCEPT);
+		g_signal_emit_by_name(dlg, "mpv-reset-request");
+		dlg->needs_mpv_reset = FALSE;
 	}
 
-	return	GTK_WIDGET_CLASS(celluloid_preferences_dialog_parent_class)
-		->key_press_event(widget, event);
+	return FALSE;
 }
 
 static void
@@ -123,85 +323,122 @@ free_signal_data(gpointer data, GClosure *closure)
 }
 
 static GtkWidget *
-build_page(const PreferencesDialogItem *items, GSettings *settings)
+build_page(	const PreferencesDialogItem *items,
+		GSettings *settings,
+		const char *title,
+		const char *icon_name )
 {
-	GtkWidget *grid = gtk_grid_new();
+	GtkWidget *pref_page = adw_preferences_page_new();
+	adw_preferences_page_set_title
+		(ADW_PREFERENCES_PAGE(pref_page), title);
+	adw_preferences_page_set_icon_name
+		(ADW_PREFERENCES_PAGE(pref_page), icon_name);
 
-	gtk_container_set_border_width(GTK_CONTAINER(grid), 12);
-	gtk_grid_set_row_spacing(GTK_GRID(grid), 6);
-	gtk_grid_set_column_spacing(GTK_GRID(grid), 12);
+	GtkWidget *pref_group = adw_preferences_group_new();
+	adw_preferences_page_add
+		(	ADW_PREFERENCES_PAGE(pref_page),
+			ADW_PREFERENCES_GROUP(pref_group) );
+
+	GSettingsSchema *schema = NULL;
+	g_object_get(settings, "settings-schema", &schema, NULL);
 
 	for(gint i = 0; items[i].type != ITEM_TYPE_INVALID; i++)
 	{
-		const gchar *label = items[i].label;
 		const gchar *key = items[i].key;
+		GSettingsSchemaKey *schema_key =
+			key ?
+			g_settings_schema_get_key(schema, key) :
+			NULL;
+		const gchar *summary =
+			schema_key ?
+			g_settings_schema_key_get_summary(schema_key) :
+			NULL;
+		const gchar *label = items[i].label ?: summary;
 		const PreferencesDialogItemType type = items[i].type;
+
 		GtkWidget *widget = NULL;
-		gboolean separate_label = FALSE;
-		gint width = 1;
-		gint xpos = 0;
 
-		if(type == ITEM_TYPE_GROUP)
+		if(type == ITEM_TYPE_SWITCH)
 		{
-			widget = gtk_label_new(label);
-			width = 2;
+			GtkWidget *pref_switch;
 
-			gtk_label_set_use_markup(GTK_LABEL(widget), TRUE);
-			gtk_widget_set_halign(widget, GTK_ALIGN_START);
-			gtk_widget_set_margin_top(widget, 12);
-		}
-		else if(type == ITEM_TYPE_CHECK_BOX)
-		{
-			widget = gtk_check_button_new_with_label(label);
-			width = 2;
+			widget = adw_action_row_new();
+			adw_preferences_row_set_title
+				(ADW_PREFERENCES_ROW(widget), label);
+
+			pref_switch = gtk_switch_new();
+			gtk_widget_set_valign
+				(pref_switch, GTK_ALIGN_CENTER);
+			adw_action_row_add_suffix
+				(ADW_ACTION_ROW(widget), pref_switch);
+			adw_action_row_set_activatable_widget
+				(ADW_ACTION_ROW(widget), pref_switch);
 
 			g_settings_bind(	settings,
 						key,
-						widget,
+						pref_switch,
 						"active",
 						G_SETTINGS_BIND_DEFAULT );
 		}
 		else if(type == ITEM_TYPE_FILE_CHOOSER)
 		{
-			GtkFileChooser *chooser;
+			GtkWidget *button;
 			GtkFileFilter *filter;
-			gchar *filename;
+			gchar *uri;
+			GFile *file;
 
-			widget = gtk_file_chooser_button_new
-					(label, GTK_FILE_CHOOSER_ACTION_OPEN);
-			chooser = GTK_FILE_CHOOSER(widget);
+			widget = adw_action_row_new();
+			adw_preferences_row_set_title
+				(ADW_PREFERENCES_ROW(widget), label);
+
+			button = celluloid_file_chooser_button_new
+				(	NULL,
+					GTK_FILE_CHOOSER_ACTION_OPEN );
+			gtk_widget_set_valign
+				(button, GTK_ALIGN_CENTER);
+			adw_action_row_add_suffix
+				(ADW_ACTION_ROW(widget), button);
+			adw_action_row_set_activatable_widget
+				(ADW_ACTION_ROW(widget), button);
+
 			filter = gtk_file_filter_new();
-			filename = g_settings_get_string(settings, key);
-			separate_label = TRUE;
-			xpos = 1;
+			uri = g_settings_get_string(settings, key);
+			file = g_file_new_for_uri(uri);
 
-			gtk_file_filter_add_mime_type(filter, "text/plain");
-			gtk_file_chooser_set_filter(chooser, filter);
+			gtk_file_filter_add_mime_type
+				(filter, "text/plain");
+			celluloid_file_chooser_button_set_filter
+				(CELLULOID_FILE_CHOOSER_BUTTON(button), filter);
 
-			gtk_widget_set_hexpand(widget, TRUE);
-			gtk_widget_set_size_request(widget, 100, -1);
-			gtk_file_chooser_set_filename(chooser, filename);
+			if(g_file_query_exists(file, NULL))
+			{
+				celluloid_file_chooser_button_set_file
+					(	CELLULOID_FILE_CHOOSER_BUTTON(button),
+						 file,
+						 NULL );
+			}
 
 			/* For simplicity, changes made to the GSettings
 			 * database externally won't be reflected immediately
 			 * for this type of widget.
 			 */
-			g_signal_connect_data(	widget,
+			g_signal_connect_data(	button,
 						"file-set",
 						G_CALLBACK(file_set_handler),
 						g_strdup(key),
 						free_signal_data,
 						0 );
 
-			g_free(filename);
+			g_free(uri);
 		}
 		else if(type == ITEM_TYPE_TEXT_BOX)
 		{
-			widget = gtk_entry_new();
-			separate_label = TRUE;
-			xpos = 1;
 
-			gtk_widget_set_hexpand(widget, TRUE);
+			widget = adw_entry_row_new();
+			adw_preferences_row_set_title
+				(ADW_PREFERENCES_ROW(widget), label);
+			gtk_widget_set_hexpand
+				(widget, TRUE);
 
 			g_settings_bind(	settings,
 						key,
@@ -209,242 +446,90 @@ build_page(const PreferencesDialogItem *items, GSettings *settings)
 						"text",
 						G_SETTINGS_BIND_DEFAULT );
 		}
-		else if(type == ITEM_TYPE_LABEL)
-		{
-			widget = gtk_label_new(label);
 
-			gtk_widget_set_halign(widget, GTK_ALIGN_START);
-		}
-
-		g_assert(widget);
-		g_assert(xpos == 0 || xpos == 1);
-
-		if(i == 0)
-		{
-			gtk_widget_set_margin_top(widget, 0);
-		}
-
-		if(type != ITEM_TYPE_GROUP)
-		{
-			gtk_widget_set_margin_start(widget, 12);
-		}
-
-		/* Expand the widget to fill both columns if it usually needs a
-		 * separate label but none is provided.
-		 */
-		if(separate_label && !label)
-		{
-			width = 2;
-			xpos = 0;
-		}
-
-		gtk_grid_attach(GTK_GRID(grid), widget, xpos, i, width, 1);
-
-		if(separate_label && label)
-		{
-			GtkWidget *label_widget = gtk_label_new(label);
-
-			/* The grid should only have 2 columns, so the previous
-			 * widget connot be wider than 1 column if it needs a
-			 * seperate label.
-			 */
-			g_assert(width == 1);
-
-			gtk_grid_attach(	GTK_GRID(grid),
-						label_widget,
-						1-xpos, i, 1, 1 );
-
-			gtk_widget_set_halign(label_widget, GTK_ALIGN_START);
-			gtk_widget_set_hexpand(label_widget, FALSE);
-			gtk_widget_set_margin_start(label_widget, 12);
-		}
+		adw_preferences_group_add
+			(ADW_PREFERENCES_GROUP(pref_group), widget);
 	}
 
-	return grid;
+	return pref_page;
 }
 
 static void
-preferences_dialog_constructed(GObject *obj)
+finalize(GObject *object)
 {
-	gboolean csd_enabled;
+	CelluloidPreferencesDialog *dialog = CELLULOID_PREFERENCES_DIALOG(object);
 
-	g_object_get(obj, "use-header-bar", &csd_enabled, NULL);
+	g_clear_object(&dialog->settings);
 
-	if(!csd_enabled)
-	{
-		GtkWidget *content_area;
-		GtkWidget *notebook;
-
-		content_area = gtk_dialog_get_content_area(GTK_DIALOG(obj));
-		notebook = CELLULOID_PREFERENCES_DIALOG(obj)->notebook;
-
-		gtk_widget_set_margin_bottom(content_area, 12);
-		gtk_widget_set_margin_bottom(notebook, 12);
-	}
-
-	G_OBJECT_CLASS(celluloid_preferences_dialog_parent_class)->constructed(obj);
+	G_OBJECT_CLASS(celluloid_preferences_dialog_parent_class)
+		->finalize(object);
 }
 
 static void
 celluloid_preferences_dialog_class_init(CelluloidPreferencesDialogClass *klass)
 {
-	GtkWidgetClass *wid_class = GTK_WIDGET_CLASS(klass);
+	GParamSpec *pspec = NULL;
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-	wid_class->key_press_event = key_press_handler;
-	GTK_DIALOG_CLASS(klass)->response = response_handler;
-	G_OBJECT_CLASS(klass)->constructed = preferences_dialog_constructed;
+	object_class->constructed = constructed;
+	object_class->finalize = finalize;
+	object_class->set_property = set_property;
+	object_class->get_property = get_property;
 
-	gtk_widget_class_set_css_name(wid_class, "celluloid-preferences-dialog");
+	pspec = g_param_spec_pointer
+		(	"parent",
+			"Parent",
+			"Parent window",
+			G_PARAM_CONSTRUCT_ONLY|G_PARAM_READWRITE );
+	g_object_class_install_property(object_class, PROP_PARENT, pspec);
+
+	g_signal_new(	"mpv-reset-request",
+			G_TYPE_FROM_CLASS(klass),
+			G_SIGNAL_RUN_FIRST,
+			0,
+			NULL,
+			NULL,
+			g_cclosure_marshal_VOID__VOID,
+			G_TYPE_NONE,
+			0 );
+
+	g_signal_new(	"error-raised",
+			G_TYPE_FROM_CLASS(klass),
+			G_SIGNAL_RUN_FIRST,
+			0,
+			NULL,
+			NULL,
+			g_cclosure_marshal_VOID__STRING,
+			G_TYPE_NONE,
+			1,
+			G_TYPE_STRING );
 }
 
 static void
 celluloid_preferences_dialog_init(CelluloidPreferencesDialog *dlg)
 {
-	const PreferencesDialogItem interface_items[]
-		= {	{_("Automatically resize window to fit video"),
-			"autofit-enable",
-			ITEM_TYPE_CHECK_BOX},
-			{_("Enable client-side decorations"),
-			"csd-enable",
-			ITEM_TYPE_CHECK_BOX},
-			{_("Enable dark theme"),
-			"dark-theme-enable",
-			ITEM_TYPE_CHECK_BOX},
-			{_("Use floating controls in windowed mode"),
-			"always-use-floating-controls",
-			ITEM_TYPE_CHECK_BOX},
-			{_("Autohide mouse cursor in windowed mode"),
-			"always-autohide-cursor",
-			ITEM_TYPE_CHECK_BOX},
-			{_("Use skip buttons for controlling playlist"),
-			"use-skip-buttons-for-playlist",
-			ITEM_TYPE_CHECK_BOX},
-			{_("Remember last file's location"),
-			"last-folder-enable",
-			ITEM_TYPE_CHECK_BOX},
-			{NULL, NULL, ITEM_TYPE_INVALID} };
-	const PreferencesDialogItem config_items[]
-		= {	{_("Load MPV configuration file"),
-			"mpv-config-enable",
-			ITEM_TYPE_CHECK_BOX},
-			{_("MPV configuration file:"),
-			"mpv-config-file",
-			ITEM_TYPE_FILE_CHOOSER},
-			{_("Load MPV input configuration file"),
-			"mpv-input-config-enable",
-			ITEM_TYPE_CHECK_BOX},
-			{_("MPV input configuration file:"),
-			"mpv-input-config-file",
-			ITEM_TYPE_FILE_CHOOSER},
-			{NULL, NULL, ITEM_TYPE_INVALID} };
-	const PreferencesDialogItem misc_items[]
-		= {	{_("Always open new window"),
-			"always-open-new-window",
-			ITEM_TYPE_CHECK_BOX},
-			{_("Ignore playback errors"),
-			"ignore-playback-errors",
-			ITEM_TYPE_CHECK_BOX},
-			{_("Prefetch metadata"),
-			"prefetch-metadata",
-			ITEM_TYPE_CHECK_BOX},
-			{_("Enable MPRIS support"),
-			"mpris-enable",
-			ITEM_TYPE_CHECK_BOX},
-			{_("Enable media keys support"),
-			"media-keys-enable",
-			ITEM_TYPE_CHECK_BOX},
-			{_("Extra MPV options:"),
-			NULL,
-			ITEM_TYPE_LABEL},
-			{NULL,
-			"mpv-options",
-			ITEM_TYPE_TEXT_BOX},
-			{NULL, NULL, ITEM_TYPE_INVALID} };
-
-	GtkWidget *content_area;
-	GdkGeometry geom;
-
-	/* This 'locks' the height of the dialog while allowing the width to be
-	 * freely adjusted.
-	 */
-	geom.max_width = G_MAXINT;
-	geom.max_height = 0;
-
 	dlg->settings = g_settings_new(CONFIG_ROOT);
-	dlg->notebook = gtk_notebook_new();
-	content_area = gtk_dialog_get_content_area(GTK_DIALOG(dlg));
+	dlg->needs_mpv_reset = FALSE;
+	dlg->parent = NULL;
 
 	g_settings_delay(dlg->settings);
-
-	gtk_window_set_geometry_hints(	GTK_WINDOW(dlg),
-					GTK_WIDGET(dlg),
-					&geom,
-					GDK_HINT_MAX_SIZE );
-
-	gtk_container_set_border_width(GTK_CONTAINER(content_area), 0);
-	gtk_container_add(GTK_CONTAINER(content_area), dlg->notebook);
-
-	gtk_notebook_append_page(	GTK_NOTEBOOK(dlg->notebook),
-					build_page(interface_items, dlg->settings),
-					gtk_label_new(_("Interface")) );
-	gtk_notebook_append_page(	GTK_NOTEBOOK(dlg->notebook),
-					build_page(config_items, dlg->settings),
-					gtk_label_new(_("Config Files")) );
-	gtk_notebook_append_page(	GTK_NOTEBOOK(dlg->notebook),
-					build_page(misc_items, dlg->settings),
-					gtk_label_new(_("Miscellaneous")) );
-	gtk_notebook_append_page(	GTK_NOTEBOOK(dlg->notebook),
-					celluloid_plugins_manager_new(GTK_WINDOW(dlg)),
-					gtk_label_new(_("Plugins")) );
-
-	gtk_dialog_add_buttons(	GTK_DIALOG(dlg),
-				_("_Cancel"),
-				GTK_RESPONSE_REJECT,
-				_("_Save"),
-				GTK_RESPONSE_ACCEPT,
-				NULL );
-
-	gtk_dialog_set_default_response(GTK_DIALOG(dlg), GTK_RESPONSE_ACCEPT);
-
 }
 
 GtkWidget *
 celluloid_preferences_dialog_new(GtkWindow *parent)
 {
 	GtkWidget *dlg;
-	GtkWidget *header_bar;
-	gboolean csd_enabled;
-
-	csd_enabled = celluloid_main_window_get_csd_enabled(CELLULOID_MAIN_WINDOW(parent));
 
 	dlg = g_object_new(	celluloid_preferences_dialog_get_type(),
+				"parent", parent,
 				"title", _("Preferences"),
-				"modal", TRUE,
-				"transient-for", parent,
-				"use-header-bar", csd_enabled,
 				NULL );
 
-	header_bar = gtk_dialog_get_header_bar(GTK_DIALOG(dlg));
-
-	if(header_bar)
-	{
-		/* The defaults use PACK_END which is ugly with multiple buttons
-		 */
-		GtkWidget *cancel_btn = gtk_dialog_get_widget_for_response
-					(GTK_DIALOG(dlg), GTK_RESPONSE_REJECT);
-
-		gtk_container_child_set(	GTK_CONTAINER(header_bar),
-						cancel_btn,
-						"pack-type",
-						GTK_PACK_START,
-						NULL );
-
-		gtk_header_bar_set_show_close_button
-			(GTK_HEADER_BAR(header_bar), FALSE);
-	}
-
-	gtk_widget_hide_on_delete(dlg);
-	gtk_widget_show_all(dlg);
-
 	return dlg;
+}
+
+void
+celluloid_preferences_dialog_present(CelluloidPreferencesDialog *self)
+{
+	adw_dialog_present(ADW_DIALOG(self), GTK_WIDGET(self->parent));
 }

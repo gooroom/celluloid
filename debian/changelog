@@ -1,56 +1,116 @@
-celluloid (0.20-2+grm3u6) unstable; urgency=medium
+celluloid (0.28-2) unstable; urgency=high
 
-  [ boyeon.choi ]
-  * [c664732f] Removed the function called twice
+  * Team upload.
+  * d/control:
+    - Remove build-dependency libdisplay-info-dev (Closes: #1101845)
+    NOTE: Previously missing in libmpv-dev causes FTBFS in this package
+    - Add build-dependency desktop-file-utils optionally required
+    NOTE: The desktop-file-validate shows as missing in build logs, but not
+    causes FTBFS
+    The desktop-file-validate program is a tool to validate desktop entry
+    files according to the Desktop Entry specification
 
- -- Gooroom Autobuilder <jenkins@gooroom.kr>  Fri, 03 Feb 2023 17:06:00 +0900
+ -- Leandro Cunha <leandrocunha016@gmail.com>  Fri, 04 Apr 2025 20:11:37 -0300
 
-celluloid (0.20-2+grm3u5) unstable; urgency=medium
+celluloid (0.28-1) unstable; urgency=high
 
-  [ subin.kim ]
-  * [953a371f] Cleared the open location entry
+  * Team upload.
+  * New upstream version 0.28 (Closes: #1101075, #1098391)
+  * d/control:
+    - Add build-dep libdisplay-info-dev (Closes: #1101845)
+    - Bump Standards-Version to 4.7.2, no changes needed
+    - Set libadwaita-1-dev to >=1.6.0
+  * d/copyright: Update year for upstream and myself
 
- -- Gooroom Autobuilder <jenkins@gooroom.kr>  Thu, 08 Sep 2022 15:11:17 +0900
+ -- Leandro Cunha <leandrocunha016@gmail.com>  Fri, 04 Apr 2025 11:54:08 -0300
 
-celluloid (0.20-2+grm3u4) unstable; urgency=medium
+celluloid (0.27-1) unstable; urgency=medium
 
-  [ subin.kim ]
-  * [fc8ceed1] [Bug:5153,4316] Removed extra mpv options area
+  * Team upload.
+  * New upstream version.
+    + Sync translations.
+    + Important improvements.
+  * d/control:
+    - Bump Standards-Version to 4.7.0.
+    - Obsolete build depends package pkg-config to pkgconf (Lintian report).
+  * d/copyright: Update year for upstream and add myself.
 
- -- Gooroom Autobuilder <jenkins@gooroom.kr>  Mon, 20 Jun 2022 08:23:47 +0900
+ -- Leandro Cunha <leandrocunha016@gmail.com>  Sun, 30 Jun 2024 13:58:31 -0300
 
-celluloid (0.20-2+grm3u3) unstable; urgency=medium
+celluloid (0.26-1) unstable; urgency=medium
 
-  [ subin.kim ]
-  * [22916e59] [Bug:4709,5042] Hide dark-theme check box
-  * [9754374f] deleted csd deco option
-  * [efa67874] [Bug:4708] Made pref dialog resizable
+  * Team upload.
+  * New upstream version.
+  * d/patches: Drop 00-fix-crash.patch this version included the change.
+  * Drop transitional package gnome-mpv from src:celluloid. (Closes: #1038314)
+  * Drop debian/celluloid.install and fixed build.
+  * d/control: Set libadwaita version requirement to 1.2.0.
 
- -- Gooroom Autobuilder <jenkins@gooroom.kr>  Thu, 26 May 2022 15:35:58 +0900
+ -- Leandro Cunha <leandrocunha016@gmail.com>  Mon, 18 Sep 2023 16:16:14 -0300
 
-celluloid (0.20-2+grm3u2) unstable; urgency=medium
+celluloid (0.25-2) unstable; urgency=medium
 
-  [ subin.kim ]
-  * [1bc4f96b] [Bug:3941]Removed application name
-  * [93ba9039] Flexible help menu added
-  * [dc4b646a] [Bug:4708] Made pref dialog unresizable
+  * Team upload.
+  * d/patches/00-fix-crash.patch: Fix fails to start due to failed assertion
+    in stream.c. (Closes: #1049458)
+    - NOTE: Fix crash when mpv-config-file isn't set to a URI.
+  * d/rules: Export DEB_BUILD_MAINT_OPTIONS for Hardening.
 
- -- Gooroom Autobuilder <jenkins@gooroom.kr>  Mon, 28 Feb 2022 07:54:57 +0900
+ -- Leandro Cunha <leandrocunha016@gmail.com>  Mon, 21 Aug 2023 03:28:07 -0300
 
-celluloid (0.20-2+grm3u1) unstable; urgency=medium
+celluloid (0.25-1) unstable; urgency=medium
 
-  [ subin.kim ]
-  * [57f6ea31] Added patch regarding shortcuts
-  * [e3c0c4cf] [Bug:1333] Fixed image filter error
-  * [a184f7a0] [Bug:1345-1347,2017,2021,2507] Fixed video size adjustment issues
-  * [22f782fc] [Bug:1705,1369,1340,1376,2104,2108] Removed video/audio track menu
-  * [779e4bfd] [Bug:2072] Save playlist only if not empty
-  * [092b1f98] [Bug:3066] Set minimum window size
-  * [916f38ba] [Bug:3093] Fixed reoccuring alert error message appears once
-  * [b1173cbc] Generated korean po file
-  * [9234067d] Fixed static code analysis issue
+  * Team upload.
 
- -- Gooroom Autobuilder <jenkins@gooroom.kr>  Sat, 04 Dec 2021 17:31:28 +0900
+  [ Danial Behzadi ]
+  * New upstream version. (Closes: #994531, #1024098)
+    + Important change: Application version with port to GTK4 (0.22 tag).
+    + Bug fixes.
+  * d/control:
+    - Add Danial Behzadi <dani.behzi@ubuntu.com> to uploaders.
+    - Bump Standards-Version to 4.6.2, no changes needed.
+  * d/copyright:
+    - Add Danial Behzadi <dani.behzi@ubuntu.com>.
+    - Update GPL-3+ license text.
+  * Add d/upstream/metadata.
+  * d/watch: Bump version 3 to 4.
+  * d/rules: Add override dh clean for po/*.gmo po/stamp-po files.
+  * d/patches: Drop patches.
+
+  [ Debian Janitor ]
+  * d/control:
+    - Remove constraints unnecessary since buster.
+    - Move transitional package gnome-mpv to oldlibs/optional per policy 4.0.1.
+  * d/rules: Drop unnecessary dependency on dh-autoreconf.
+
+  [ Jeremy Bicha ]
+  * d/rules: Build using buildsystem meson.
+  * d/control: Add build dep meson and remove Python.
+
+  [ Leandro Cunha ]
+  * d/copyright: Update years for upstream.
+  * d/control:
+    - Change youtube-dl to yt-dlp in recommends field. (Closes: #1024222)
+  * Add d/salsa-ci.yml.
+
+  [ Boyuan Yang ]
+  * debian/: Apply "wrap-and-sort -abst".
+  * Review and prepare the upload.
+
+ -- Boyuan Yang <byang@debian.org>  Wed, 02 Aug 2023 13:51:35 -0400
+
+celluloid (0.24-2) unstable; urgency=medium
+
+  * Fix some linting warnings.
+  * Remove unnecessary patches.
+
+ -- Danial Behzadi <dani.behzi@ubuntu.com>  Wed, 08 Mar 2023 03:04:27 +0330
+
+celluloid (0.24-1) unstable; urgency=medium
+
+  * New upstream version 0.24
+
+ -- Danial Behzadi <dani.behzi@ubuntu.com>  Tue, 07 Mar 2023 15:33:41 +0330
 
 celluloid (0.20-2) unstable; urgency=medium
 

@@ -21,6 +21,7 @@ Makefile
 config.*
 po/POTFILES
 po/stamp-it
+po/en.po
 /po/Makevars.template
 /po/*~
 /po/*.sed
@@ -50,7 +51,6 @@ data/celluloid.desktop
 data/org.gnome-mpv.gschema.xml
 data/io.github.celluloid_player.Celluloid.appdata.xml
 data/io.github.celluloid_player.Celluloid.desktop
-po/celluloid.pot
 po/*.gmo
 po/.intltool-merge-cache
 .dirstamp

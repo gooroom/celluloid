@@ -14,31 +14,31 @@
 		</key>
 		<key name='autofit-enable' type='b'>
 			<default>true</default>
-			<summary>Whether or not to automatically resize window to fit video</summary>
+			<summary>Automatically resize window to fit video</summary>
 			<description>
 			</description>
 		</key>
 		<key name="dark-theme-enable" type="b">
 			<default>true</default>
-			<summary>Enable or disable dark theme</summary>
+			<summary>Prefer dark theme</summary>
 			<description>
 			</description>
 		</key>
 		<key name="csd-enable" type="b">
 			<default>true</default>
-			<summary>Enable or disable client-side decorations</summary>
+			<summary>Enable client-side decorations</summary>
 			<description>
 			</description>
 		</key>
 		<key name="always-use-floating-controls" type="b">
 			<default>false</default>
-			<summary>Whether or not to use floating controls in windowed mode</summary>
+			<summary>Use floating controls in windowed mode</summary>
 			<description>
 			</description>
 		</key>
 		<key name="always-autohide-cursor" type="b">
 			<default>false</default>
-			<summary>Whether or not to autohide mouse cursor in windowed mode</summary>
+			<summary>Automatically hide mouse cursor in windowed mode</summary>
 			<description>
 			</description>
 		</key>
@@ -51,26 +51,53 @@
 		<key name="controls-dead-zone-size" type="d">
 			<range min="0" max="1"/>
 			<default>0</default>
-			<summary>The size of the dead zone in which cursor movement will not cause the controls to be shown.</summary>
+			<summary>Size of the dead zone in which cursor movement will not cause the controls to be shown.</summary>
 			<description>
 			</description>
 		</key>
 		<key name="use-skip-buttons-for-playlist" type="b">
-			<default>false</default>
-			<summary>Whether or not to use skip buttons for controlling playlist</summary>
+			<default>true</default>
+			<summary>Use skip buttons to control the playlist</summary>
 			<description>
 			</description>
 		</key>
 		<key name="last-folder-enable" type="b">
 			<default>false</default>
-			<summary>Whether or not to make file chooser dialog remember last folder accessed</summary>
+			<summary>Remember last location in file chooser</summary>
 			<description>
 			</description>
 		</key>
 		<key name="always-open-new-window" type="b">
 			<default>false</default>
-			<summary>Whether or not to create new windows when there is already an instance</summary>
+			<summary>Open new window when opening new files</summary>
 			<description>
+                                When opening new files through D-Bus (e.g.
+                                using a file manager), open the file in a new
+                                window.
+			</description>
+		</key>
+		<key name="always-append-to-playlist" type="b">
+			<default>false</default>
+			<summary>Always append opened files to playlist</summary>
+			<description>
+			</description>
+		</key>
+		<key name="always-show-title-buttons" type="b">
+			<default>false</default>
+			<summary>Show title buttons in fullscreen mode</summary>
+			<description>
+                                If true, title buttons (close, maximize,
+                                minimize, etc.) are always shown. If false, the
+                                buttons will be hidden in fullscreen mode.
+			</description>
+		</key>
+		<key name="present-window-on-file-open" type="b">
+			<default>false</default>
+			<summary>Give focus to the window when opening new files</summary>
+			<description>
+                                If true, Celluloid will give focus to the window
+                                when a new file is opened. If false, no attempt
+                                will be made.
 			</description>
 		</key>
 		<key name="mpv-options" type="s">
@@ -87,7 +114,7 @@
 		</key>
 		<key name="mpv-config-enable" type="b">
 			<default>false</default>
-			<summary>Load or don't load mpv configuration file</summary>
+			<summary>Load mpv configuration file</summary>
 			<description>
 			</description>
 		</key>
@@ -99,37 +126,43 @@
 		</key>
 		<key name="mpv-input-config-enable" type="b">
 			<default>false</default>
-			<summary>Load or don't load mpv input configuration file</summary>
+			<summary>Load mpv input configuration file</summary>
 			<description>
 			</description>
 		</key>
 		<key name="mpris-enable" type="b">
 			<default>true</default>
-			<summary>Whether or not to enable MPRIS support</summary>
+			<summary>Enable MPRIS support</summary>
 			<description>
 			</description>
 		</key>
-		<key name="media-keys-enable" type="b">
+		<key name="menubar-accel-enable" type="b">
 			<default>true</default>
-			<summary>Whether or not to enable GNOME-Settings-Daemon-based media keys support</summary>
+			<summary>Enable menubar accelerator key handling</summary>
 			<description>
 			</description>
 		</key>
 		<key name="prefetch-metadata" type="b">
 			<default>true</default>
-			<summary>Whether or not to prefetch metadata for non-current playlist entries</summary>
+			<summary>Prefetch metadata</summary>
 			<description>
 			</description>
 		</key>
 		<key name="ignore-playback-errors" type="b">
 			<default>false</default>
-			<summary>Whether or not to display an error message when playback of a file ends with an error</summary>
+			<summary>Ignore playback errors</summary>
 			<description>
 			</description>
 		</key>
 		<key name="inhibit-idle" type="b">
 			<default>true</default>
-			<summary>Whether or not to inhibit session idling when something is playing</summary>
+			<summary>Inhibit session idling</summary>
+			<description>
+			</description>
+		</key>
+		<key name="draggable-video-area-enable" type="b">
+			<default>false</default>
+			<summary>Make video area draggable</summary>
 			<description>
 			</description>
 		</key>
@@ -176,13 +209,13 @@
 		</key>
 		<key name="show-controls" type="b">
 			<default>true</default>
-			<summary>Show or not show the controls</summary>
+			<summary>Show/hide the controls</summary>
 			<description>
 			</description>
 		</key>
 		<key name="show-playlist" type="b">
 			<default>false</default>
-			<summary>Show or not show the playlist</summary>
+			<summary>Show/hide the playlist</summary>
 			<description>
 			</description>
 		</key>

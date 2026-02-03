@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 gnome-mpv
+ * Copyright (c) 2016-2022, 2024 gnome-mpv
  *
  * This file is part of Celluloid.
  *
@@ -26,7 +26,7 @@
 
 #define CELLULOID_TYPE_HEADER_BAR (celluloid_header_bar_get_type ())
 
-G_DECLARE_FINAL_TYPE(CelluloidHeaderBar, celluloid_header_bar, CELLULOID, HEADER_BAR, GtkHeaderBar)
+G_DECLARE_FINAL_TYPE(CelluloidHeaderBar, celluloid_header_bar, CELLULOID, HEADER_BAR, GtkBox)
 
 GtkWidget *
 celluloid_header_bar_new(void);
@@ -34,12 +34,19 @@ celluloid_header_bar_new(void);
 gboolean
 celluloid_header_bar_get_open_button_popup_visible(CelluloidHeaderBar *hdr);
 
+void
+celluloid_header_bar_set_open_button_popup_visible(	CelluloidHeaderBar *hdr,
+							gboolean visible );
+
 gboolean
 celluloid_header_bar_get_menu_button_popup_visible(CelluloidHeaderBar *hdr);
 
 void
-celluloid_header_bar_set_fullscreen_state(	CelluloidHeaderBar *hdr,
-						gboolean fullscreen );
+celluloid_header_bar_set_menu_button_popup_visible(	CelluloidHeaderBar *hdr,
+							gboolean visible );
+
+void
+celluloid_header_bar_set_floating(CelluloidHeaderBar *hdr, gboolean floating);
 
 void
 celluloid_header_bar_update_track_list(	CelluloidHeaderBar *hdr,

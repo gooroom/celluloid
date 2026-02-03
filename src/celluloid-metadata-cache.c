@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 gnome-mpv
+ * Copyright (c) 2017-2021 gnome-mpv
  *
  * This file is part of Celluloid.
  *
@@ -19,7 +19,6 @@
 
 #include "celluloid-metadata-cache.h"
 #include "celluloid-mpv.h"
-#include "celluloid-mpv-wrapper.h"
 
 struct _CelluloidMetadataCache
 {
@@ -151,9 +150,12 @@ mpv_event_notify(	CelluloidMpv *mpv,
 		celluloid_mpv_get_property
 			(mpv, "path", MPV_FORMAT_STRING, &path);
 
-		g_debug("Fetched metadata for %s", path);
+		if(path)
+		{
+			g_debug("Fetched metadata for %s", path);
 
-		entry =	g_hash_table_lookup(cache->table, path);
+			entry =	g_hash_table_lookup(cache->table, path);
+		}
 
 		if(entry)
 		{
@@ -237,14 +239,10 @@ fetch_metadata(CelluloidMetadataCache *cache)
 	celluloid_mpv_set_option_string(cache->fetcher, "ytdl", "yes");
 	celluloid_mpv_initialize(cache->fetcher);
 
-	for(	gchar *uri = g_queue_pop_tail(cache->fetch_queue);
-		uri;
-		uri = g_queue_pop_tail(cache->fetch_queue) )
-	{
-		g_debug("Queuing %s for metadata fetch", uri);
-		celluloid_mpv_load_file(cache->fetcher, uri, TRUE);
-		g_free(uri);
-	}
+	gchar *uri = g_queue_pop_tail(cache->fetch_queue);
+	g_debug("Queuing %s for metadata fetch", uri);
+	celluloid_mpv_load_file(cache->fetcher, uri, TRUE);
+	g_free(uri);
 
 	cache->fetch_timeout_id = 0;
 

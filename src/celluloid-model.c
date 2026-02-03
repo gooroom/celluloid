@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020 gnome-mpv
+ * Copyright (c) 2017-2022 gnome-mpv
  *
  * This file is part of Celluloid.
  *
@@ -21,7 +21,9 @@
 
 #include "celluloid-model.h"
 #include "celluloid-marshal.h"
-#include "celluloid-mpv-wrapper.h"
+#include "celluloid-mpv.h"
+#include "celluloid-option-parser.h"
+#include "celluloid-def.h"
 
 enum
 {
@@ -32,7 +34,6 @@ enum
 	PROP_CHAPTERS,
 	PROP_CORE_IDLE,
 	PROP_IDLE_ACTIVE,
-	PROP_BORDER,
 	PROP_FULLSCREEN,
 	PROP_PAUSE,
 	PROP_LOOP_FILE,
@@ -65,7 +66,6 @@ struct _CelluloidModel
 	gint64 chapters;
 	gboolean core_idle;
 	gboolean idle_active;
-	gboolean border;
 	gboolean fullscreen;
 	gboolean pause;
 	gchar *loop_file;
@@ -81,12 +81,16 @@ struct _CelluloidModel
 	gboolean window_maximized;
 	gdouble window_scale;
 	gdouble display_fps;
+	GStrv input_binding_list;
 };
 
 struct _CelluloidModelClass
 {
 	GObjectClass parent_class;
 };
+
+static gboolean
+extra_options_contains(CelluloidModel *model, const gchar *option);
 
 static void
 set_property(	GObject *object,
@@ -135,6 +139,44 @@ mpv_prop_change_handler(	CelluloidMpv *mpv,
 				gpointer data );
 
 G_DEFINE_TYPE(CelluloidModel, celluloid_model, CELLULOID_TYPE_PLAYER)
+
+static gboolean
+extra_options_contains(CelluloidModel *model, const gchar *option)
+{
+	gboolean result = FALSE;
+	gchar *extra_options = NULL;
+	const gchar *cur = NULL;
+
+	g_object_get(model, "extra-options", &extra_options, NULL);
+
+	cur = extra_options;
+
+	while(cur && *cur && !result)
+	{
+		gchar *key = NULL;
+		gchar *value = NULL;
+
+		cur = parse_option(cur, &key, &value);
+
+		if(key && *key)
+		{
+			result |= g_strcmp0(key, option) == 0;
+		}
+		else
+		{
+			g_warning("Failed to parse options");
+
+			cur = NULL;
+		}
+
+		g_free(key);
+		g_free(value);
+	}
+
+	g_free(extra_options);
+
+	return result;
+}
 
 static void
 set_property(	GObject *object,
@@ -185,15 +227,7 @@ set_property(	GObject *object,
 
 		case PROP_IDLE_ACTIVE:
 		self->idle_active = g_value_get_boolean(value);
-
-		if(self->idle_active)
-		{
-			g_object_notify(object, "playlist-pos");
-		}
-		break;
-
-		case PROP_BORDER:
-		self->border = g_value_get_boolean(value);
+		g_object_notify(object, "playlist-pos");
 		break;
 
 		case PROP_FULLSCREEN:
@@ -322,10 +356,6 @@ get_property(	GObject *object,
 		g_value_set_boolean(value, self->idle_active);
 		break;
 
-		case PROP_BORDER:
-		g_value_set_boolean(value, self->border);
-		break;
-
 		case PROP_FULLSCREEN:
 		g_value_set_boolean(value, self->fullscreen);
 		break;
@@ -359,7 +389,12 @@ get_property(	GObject *object,
 		break;
 
 		case PROP_PLAYLIST_POS:
-		g_value_set_int64(value, self->idle_active?0:self->playlist_pos);
+		{
+			const gint64 playlist_pos =
+				self->idle_active ? -1 : self->playlist_pos;
+
+			g_value_set_int64(value, playlist_pos);
+		}
 		break;
 
 		case PROP_SPEED:
@@ -455,13 +490,6 @@ set_mpv_property(	GObject *object,
 						&self->sid );
 		break;
 
-		case PROP_BORDER:
-		celluloid_mpv_set_property(	mpv,
-						"border",
-						MPV_FORMAT_FLAG,
-						&self->border );
-		break;
-
 		case PROP_FULLSCREEN:
 		celluloid_mpv_set_property(	mpv,
 						"fullscreen",
@@ -488,13 +516,6 @@ set_mpv_property(	GObject *object,
 						"loop-playlist",
 						MPV_FORMAT_STRING,
 						&self->loop_playlist );
-		break;
-
-		case PROP_MEDIA_TITLE:
-		celluloid_mpv_set_property(	mpv,
-						"media-title",
-						MPV_FORMAT_INT64,
-						&self->media_title );
 		break;
 
 		case PROP_PLAYLIST_POS:
@@ -664,6 +685,7 @@ mpv_prop_change_handler(	CelluloidMpv *mpv,
 {
 	if(	g_strcmp0(name, "playlist") != 0 &&
 		g_strcmp0(name, "metadata") != 0 &&
+		g_strcmp0(name, "chapter-list") != 0 &&
 		g_strcmp0(name, "track-list") != 0 )
 	{
 		GObjectClass *klass;
@@ -686,6 +708,75 @@ mpv_prop_change_handler(	CelluloidMpv *mpv,
 	}
 }
 
+static GStrv
+build_input_binding_list(CelluloidMpv *mpv)
+{
+	GStrvBuilder *builder = g_strv_builder_new();
+	mpv_node bindings_node = {0};
+	mpv_node_list *bindings_array = NULL;
+
+	const gint err =
+		celluloid_mpv_get_property
+		(	mpv,
+			"input-bindings",
+			MPV_FORMAT_NODE,
+			&bindings_node );
+
+	if(	err == MPV_ERROR_SUCCESS &&
+		bindings_node.format == MPV_FORMAT_NODE_ARRAY )
+	{
+		bindings_array = bindings_node.u.list;
+	}
+	else
+	{
+		g_warning(	"Failed to get property \"input-bindings\": %s (%d)",
+				mpv_error_string(err),
+				err );
+	}
+
+	for(int i = 0; bindings_array && i < bindings_array->num; i++)
+	{
+		mpv_node *binding_node = &bindings_array->values[i];
+		mpv_node_list *binding_map = NULL;
+
+		if(binding_node->format == MPV_FORMAT_NODE_MAP)
+		{
+			binding_map = binding_node->u.list;
+		}
+		else
+		{
+			g_warning("Input binding is not a map");
+		}
+
+		for(int j = 0; binding_map && j < binding_map->num; j++)
+		{
+			char *map_key = binding_map->keys[j];
+
+			if(g_strcmp0(map_key, "key") == 0)
+			{
+				mpv_node *key_node = &binding_map->values[j];
+
+				if(key_node->format == MPV_FORMAT_STRING)
+				{
+					g_strv_builder_add
+						(builder, key_node->u.string);
+				}
+				else
+				{
+					g_warning("Input binding key is not a string");
+				}
+			}
+		}
+	}
+
+	if(err == MPV_ERROR_SUCCESS)
+	{
+		mpv_free_node_contents(&bindings_node);
+	}
+
+	return g_strv_builder_end(builder);
+}
+
 static void
 celluloid_model_class_init(CelluloidModelClass *klass)
 {
@@ -705,7 +796,6 @@ celluloid_model_class_init(CelluloidModelClass *klass)
 			{"chapters", PROP_CHAPTERS, G_TYPE_INT64},
 			{"core-idle", PROP_CORE_IDLE, G_TYPE_BOOLEAN},
 			{"idle-active", PROP_IDLE_ACTIVE, G_TYPE_BOOLEAN},
-			{"border", PROP_BORDER, G_TYPE_BOOLEAN},
 			{"fullscreen", PROP_FULLSCREEN, G_TYPE_BOOLEAN},
 			{"pause", PROP_PAUSE, G_TYPE_BOOLEAN},
 			{"loop-file", PROP_LOOP_FILE, G_TYPE_STRING},
@@ -719,7 +809,6 @@ celluloid_model_class_init(CelluloidModelClass *klass)
 			{"volume-max", PROP_VOLUME_MAX, G_TYPE_DOUBLE},
 			{"window-maximized", PROP_WINDOW_MAXIMIZED, G_TYPE_BOOLEAN},
 			{"window-scale", PROP_WINDOW_SCALE, G_TYPE_DOUBLE},
-			{"display-fps", PROP_DISPLAY_FPS, G_TYPE_DOUBLE},
 			{NULL, PROP_INVALID, 0} };
 
 	GObjectClass *obj_class = G_OBJECT_CLASS(klass);
@@ -749,6 +838,15 @@ celluloid_model_class_init(CelluloidModelClass *klass)
 			G_PARAM_READWRITE );
 	g_object_class_install_property(obj_class, PROP_SHUFFLE, pspec);
 
+	g_signal_new(	"playlist-replaced",
+			G_TYPE_FROM_CLASS(klass),
+			G_SIGNAL_RUN_FIRST,
+			0,
+			NULL,
+			NULL,
+			g_cclosure_marshal_VOID__VOID,
+			G_TYPE_NONE,
+			0 );
 	g_signal_new(	"playback-restart",
 			G_TYPE_FROM_CLASS(klass),
 			G_SIGNAL_RUN_FIRST,
@@ -783,7 +881,6 @@ celluloid_model_init(CelluloidModel *model)
 	model->chapters = 0;
 	model->core_idle = FALSE;
 	model->idle_active = FALSE;
-	model->border = FALSE;
 	model->fullscreen = FALSE;
 	model->pause = TRUE;
 	model->loop_file = NULL;
@@ -799,6 +896,7 @@ celluloid_model_init(CelluloidModel *model)
 	model->window_maximized = FALSE;
 	model->window_scale = 1.0;
 	model->display_fps = 0.0;
+	model->input_binding_list = NULL;
 }
 
 CelluloidModel *
@@ -821,11 +919,56 @@ void
 celluloid_model_initialize(CelluloidModel *model)
 {
 	CelluloidMpv *mpv = CELLULOID_MPV(model);
+	GSettings *win_settings = g_settings_new(CONFIG_WIN_STATE);
 
 	celluloid_mpv_initialize
 		(mpv);
 	celluloid_mpv_set_render_update_callback
 		(mpv, render_update_callback, model);
+
+	if(!extra_options_contains(model, "volume"))
+	{
+		gdouble volume = g_settings_get_double(win_settings, "volume")*100;
+
+		g_debug("Setting volume to %f", volume);
+		g_object_set(model, "volume", volume, NULL);
+	}
+
+	if(extra_options_contains(model, "shuffle"))
+	{
+		// Sync the property to match mpv's
+		CelluloidMpv *mpv =
+			CELLULOID_MPV(model);
+		gboolean shuffle =
+			celluloid_mpv_get_property_flag(mpv, "shuffle");
+
+		g_object_set(model, "shuffle", shuffle, NULL);
+	}
+
+	if(extra_options_contains(model, "loop-playlist"))
+	{
+		// Sync the property to match mpv's
+		CelluloidMpv *mpv =
+			CELLULOID_MPV(model);
+		gchar *loop_playlist =
+			celluloid_mpv_get_property_string(mpv, "loop-playlist");
+
+		g_object_set(model, "loop-playlist", loop_playlist, NULL);
+
+		mpv_free(loop_playlist);
+	}
+	else
+	{
+		const gchar *loop_playlist =
+			g_settings_get_boolean(win_settings, "loop-playlist") ?
+			"inf" : "no";
+
+		g_object_set(model, "loop-playlist", loop_playlist, NULL);
+	}
+
+	model->input_binding_list = build_input_binding_list(mpv);
+
+	g_object_unref(win_settings);
 }
 
 void
@@ -881,6 +1024,17 @@ celluloid_model_key_press(CelluloidModel *model, const gchar* keystr)
 
 	g_debug("Sent '%s' key press to mpv", keystr);
 	celluloid_mpv_command_async(CELLULOID_MPV(model), cmd);
+}
+
+gboolean
+celluloid_model_input_binding_exists(CelluloidModel *model, const gchar* keystr)
+{
+	const char * const *input_binding_list =
+		(const char * const *)model->input_binding_list;
+
+	return	input_binding_list &&
+		keystr &&
+		g_strv_contains(input_binding_list, keystr);
 }
 
 void
@@ -1062,6 +1216,10 @@ celluloid_model_load_file(	CelluloidModel *model,
 				const gchar *uri,
 				gboolean append )
 {
+	GSettings *settings = g_settings_new(CONFIG_ROOT);
+
+	append |= g_settings_get_boolean(settings, "always-append-to-playlist");
+
 	celluloid_mpv_load(CELLULOID_MPV(model), uri, append);
 
 	/* Start playing when replacing the playlist, ie. not appending, or
@@ -1069,8 +1227,11 @@ celluloid_model_load_file(	CelluloidModel *model,
 	 */
 	if(!append || model->playlist_count == 0)
 	{
+		g_signal_emit_by_name(model, "playlist-replaced");
 		celluloid_model_play(model);
 	}
+
+	g_object_unref(settings);
 }
 
 gboolean

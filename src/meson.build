@@ -8,6 +8,7 @@ sources = [
   'celluloid-controller-actions.c',
   'celluloid-controller-input.c',
   'celluloid-file-chooser.c',
+  'celluloid-file-chooser-button.c',
   'celluloid-header-bar.c',
   'celluloid-main.c',
   'celluloid-main-window.c',
@@ -15,12 +16,13 @@ sources = [
   'celluloid-metadata-cache.c',
   'celluloid-model.c',
   'celluloid-mpv.c',
-  'celluloid-mpv-wrapper.c',
   'celluloid-open-location-dialog.c',
   'celluloid-option-parser.c',
   'celluloid-player.c',
   'celluloid-player-options.c',
   'celluloid-playlist-widget.c',
+  'celluloid-playlist-item.c',
+  'celluloid-playlist-model.c',
   'celluloid-plugins-manager.c',
   'celluloid-plugins-manager-item.c',
   'celluloid-preferences-dialog.c',
@@ -29,8 +31,6 @@ sources = [
   'celluloid-time-label.c',
   'celluloid-video-area.c',
   'celluloid-view.c',
-
-  'media-keys/celluloid-media-keys.c',
 
   'mpris/celluloid-mpris.c',
   'mpris/celluloid-mpris-module.c',
@@ -48,17 +48,20 @@ sources += custom_target('authors',
   ]
 )
 
-libgtk = dependency('gtk+-3.0', version: '>= 3.22.23')
+libgtk = dependency('gtk4', version: '>=4.16.0')
 localedir = join_paths(get_option('prefix'), get_option('localedir'))
 cflags = [
   '-DG_SETTINGS_ENABLE_BACKEND',
   '-DPACKAGE_LOCALEDIR="@0@"'.format(localedir),
   '-DVERSION="@0@"'.format(meson.project_version()),
   '-DGETTEXT_PACKAGE="@0@"'.format(meson.project_name()),
-  '-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_44',
-  '-DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_44',
-  '-DGDK_VERSION_MIN_REQUIRED=GDK_VERSION_3_22',
-  '-DGDK_VERSION_MAX_ALLOWED=GDK_VERSION_3_22'
+  '-DG_LOG_DOMAIN="@0@"'.format(meson.project_name()),
+  '-DADW_VERSION_MIN_REQUIRED=ADW_VERSION_1_6',
+  '-DADW_VERSION_MAX_ALLOWED=ADW_VERSION_1_6',
+  '-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_68',
+  '-DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_68',
+  '-DGDK_VERSION_MIN_REQUIRED=GDK_VERSION_4_16',
+  '-DGDK_VERSION_MAX_ALLOWED=GDK_VERSION_4_16'
 ]
 
 if get_option('buildtype') == 'release'
@@ -128,6 +131,7 @@ executable('celluloid', sources,
     libgio,
     meson.get_compiler('c').find_library('m', required: false),
     dependency('mpv', version: '>= 1.107'),
+    dependency('libadwaita-1', version: '>= 1.6.0'),
     dependency('epoxy')
   ],
   link_with: extra_libs,

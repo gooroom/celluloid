@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2020 gnome-mpv
+ * Copyright (c) 2015-2022 gnome-mpv
  *
  * This file is part of Celluloid.
  *
@@ -88,7 +88,15 @@ toggle_controls_handler(	GSimpleAction *action,
 				gpointer data );
 
 static void
+set_controls_visible_handler(	GSimpleAction *action,
+				GVariant *param,
+				gpointer data );
+
+static void
 toggle_playlist_handler(GSimpleAction *action, GVariant *param, gpointer data);
+
+static void
+set_playlist_visible_handler(GSimpleAction *action, GVariant *param, gpointer data);
 
 static void
 save_playlist_handler(GSimpleAction *action, GVariant *param, gpointer data);
@@ -119,6 +127,9 @@ show_preferences_dialog_handler(	GSimpleAction *action,
 
 static void
 quit_handler(GSimpleAction *action, GVariant *param, gpointer data);
+
+static void
+toggle_main_menu_handler(GSimpleAction *action, GVariant *param, gpointer data);
 
 static void
 set_audio_track_handler(GSimpleAction *action, GVariant *value, gpointer data);
@@ -368,12 +379,32 @@ toggle_controls_handler(GSimpleAction *action, GVariant *param, gpointer data)
 }
 
 static void
+set_controls_visible_handler(GSimpleAction *action, GVariant *param, gpointer data)
+{
+	CelluloidView *view = celluloid_controller_get_view(data);
+	gboolean visible = TRUE;
+
+	g_variant_get(param, "b", &visible);
+	celluloid_view_set_controls_visible(view, visible);
+}
+
+static void
 toggle_playlist_handler(GSimpleAction *action, GVariant *param, gpointer data)
 {
 	CelluloidView *view = celluloid_controller_get_view(data);
 	gboolean visible = celluloid_view_get_playlist_visible(view);
 
 	celluloid_view_set_playlist_visible(view, !visible);
+}
+
+static void
+set_playlist_visible_handler(GSimpleAction *action, GVariant *param, gpointer data)
+{
+	CelluloidView *view = celluloid_controller_get_view(data);
+	gboolean visible = FALSE;
+
+	g_variant_get(param, "b", &visible);
+	celluloid_view_set_playlist_visible(view, visible);
 }
 
 static void
@@ -456,6 +487,20 @@ quit_handler(GSimpleAction *action, GVariant *param, gpointer data)
 }
 
 static void
+toggle_main_menu_handler(GSimpleAction *action, GVariant *param, gpointer data)
+{
+	CelluloidView *view = celluloid_controller_get_view(data);
+	CelluloidMainWindow *wnd = CELLULOID_MAIN_WINDOW(view);
+	gboolean csd = celluloid_main_window_get_csd_enabled(wnd);
+	gboolean visible = celluloid_view_get_main_menu_visible(view);
+
+	if(csd)
+	{
+		celluloid_view_set_main_menu_visible(view, !visible);
+	}
+}
+
+static void
 set_audio_track_handler(GSimpleAction *action, GVariant *value, gpointer data)
 {
 	g_simple_action_set_state(action, value);
@@ -507,9 +552,8 @@ static void
 toggle_fullscreen_handler(GSimpleAction *action, GVariant *param, gpointer data)
 {
 	CelluloidView *view = celluloid_controller_get_view(data);
-	gboolean fullscreen = FALSE;
+	const gboolean fullscreen = gtk_window_is_fullscreen(GTK_WINDOW(view));
 
-	g_object_get(view, "fullscreen", &fullscreen, NULL);
 	celluloid_view_set_fullscreen(view, !fullscreen);
 }
 
@@ -537,7 +581,7 @@ set_video_size_handler(GSimpleAction *action, GVariant *param, gpointer data)
 static void
 show_about_dialog_handler(GSimpleAction *action, GVariant *param, gpointer data)
 {
-	celluloid_view_show_about_dialog(celluloid_controller_get_view(data));
+	celluloid_view_show_about_window(celluloid_controller_get_view(data));
 }
 
 void
@@ -569,8 +613,16 @@ celluloid_controller_action_register_actions(CelluloidController *controller)
 			.activate = show_shortcuts_dialog_handler},
 			{.name = "toggle-controls",
 			.activate = toggle_controls_handler},
+			{.name = "set-controls-visible",
+			.state = "true",
+			.parameter_type = "b",
+			.change_state = set_controls_visible_handler},
 			{.name = "toggle-playlist",
 			.activate = toggle_playlist_handler},
+			{.name = "set-playlist-visible",
+			.state = "false",
+			.parameter_type = "b",
+			.change_state = set_playlist_visible_handler},
 			{.name = "save-playlist",
 			.activate = save_playlist_handler},
 			{.name = "search-playlist",
@@ -584,6 +636,8 @@ celluloid_controller_action_register_actions(CelluloidController *controller)
 			.activate = copy_selected_playlist_item_handler},
 			{.name = "remove-selected-playlist-item",
 			.activate = remove_selected_playlist_item_handler},
+			{.name = "toggle-main-menu",
+			.activate = toggle_main_menu_handler},
 			{.name = "set-audio-track",
 			.change_state = set_audio_track_handler,
 			.state = "@x 0",
