@@ -1,0 +1,6 @@
+# Gooroom local package - not intended for Debian upload
+celluloid source: no-nmu-in-changelog
+celluloid source: source-nmu-has-incorrect-version-number
+celluloid source: latest-debian-changelog-entry-without-new-date
+# Ubuntu-specific field for tracking original maintainer
+celluloid source: unknown-field Original-Maintainer

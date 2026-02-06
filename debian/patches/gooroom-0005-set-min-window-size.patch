@@ -1,0 +1,26 @@
+diff --git a/src/celluloid-def.h b/src/celluloid-def.h
+index 31422a3..1b7736d 100644
+--- a/src/celluloid-def.h
++++ b/src/celluloid-def.h
+@@ -42,6 +42,8 @@
+ #define WAYLAND_NOCSD_HEIGHT_OFFSET 60
+ #define MAIN_WINDOW_DEFAULT_WIDTH 625
+ #define MAIN_WINDOW_DEFAULT_HEIGHT 400
++#define MAIN_WINDOW_MIN_WIDTH 440
++#define MAIN_WINDOW_MIN_HEIGHT 350
+ #define SEEK_BAR_UPDATE_INTERVAL 250
+ #define FS_CONTROL_HIDE_DELAY 1
+ #define KEYSTRING_MAX_LEN 16
+diff --git a/src/celluloid-main-window.c b/src/celluloid-main-window.c
+index 2e7d874..ce4b4e1 100644
+--- a/src/celluloid-main-window.c
++++ b/src/celluloid-main-window.c
+@@ -507,7 +507,7 @@ celluloid_main_window_init(CelluloidMainWindow *wnd)
+ 
+ 	gtk_box_append(GTK_BOX(priv->main_box), priv->video_split_view);
+ 	gtk_window_set_child(GTK_WINDOW(wnd), priv->main_box);
+-	gtk_widget_set_size_request(GTK_WIDGET(wnd), 290, 220);
++	gtk_widget_set_size_request(GTK_WIDGET(wnd), MAIN_WINDOW_MIN_WIDTH, MAIN_WINDOW_MIN_HEIGHT);
+ 
+ 	gtk_widget_set_visible(priv->header_bar, FALSE);
+ }

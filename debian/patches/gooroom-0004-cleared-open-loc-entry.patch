@@ -1,0 +1,13 @@
+diff --git a/src/celluloid-open-location-dialog.c b/src/celluloid-open-location-dialog.c
+index 2747868..9319015 100644
+--- a/src/celluloid-open-location-dialog.c
++++ b/src/celluloid-open-location-dialog.c
+@@ -294,7 +294,7 @@ celluloid_open_location_dialog_new(GtkWindow *parent, const gchar *title)
+ 			(GTK_HEADER_BAR(header_bar), FALSE);
+ 	}
+ 
+-	load_text_from_clipboard(CELLULOID_OPEN_LOCATION_DIALOG(dlg));
++	//load_text_from_clipboard(CELLULOID_OPEN_LOCATION_DIALOG(dlg));
+ 	gtk_widget_set_visible(dlg, TRUE);
+ 
+ 	return dlg;

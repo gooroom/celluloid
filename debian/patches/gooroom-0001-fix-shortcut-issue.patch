@@ -1,0 +1,53 @@
+diff --git a/src/celluloid-def.h b/src/celluloid-def.h
+index 31422a3..010cc39 100644
+--- a/src/celluloid-def.h
++++ b/src/celluloid-def.h
+@@ -105,6 +105,12 @@
+ 		"F9 script-message celluloid-action win.toggle-playlist",\
+ 		"DEL script-message celluloid-action win.remove-selected-playlist-item",\
+ 		"U stop",\
++		"j ignore",\
++		"J ignore",\
++		"RIGHT no-osd seek 5 exact",\
++		"LEFT no-osd seek -5 exact",\
++		"UP no-osd seek 60 exact",\
++		"DOWN no-osd seek -60 exact",\
+ 		"STOP stop",\
+ 		"F10 script-message celluloid-action win.toggle-main-menu",\
+ 		"F11 cycle fullscreen",\
+@@ -112,6 +118,9 @@
+ 		"WHEEL_DOWN add volume -2",\
+ 		"WHEEL_LEFT no-osd seek -10",\
+ 		"WHEEL_RIGHT no-osd seek 10",\
++		"Ctrl+RIGHT ignore",\
++		"Ctrl+LEFT ignore",\
++		"SHARP ignore",\
+ 		NULL }
+ 
+ #define KEYSTRING_MAP	{	"PGUP", "Page_Up",\
+@@ -147,6 +156,8 @@
+ 				"SLEEP", "Sleep",\
+ 				"CANCEL", "Cancel",\
+ 				"RECORD", "AudioRecord",\
++				"[", "bracketleft",\
++				"]", "bracketright",\
+ 				"", "Control_L",\
+ 				"", "Control_R",\
+ 				"", "Alt_L",\
+diff --git a/src/celluloid-shortcuts-window.c b/src/celluloid-shortcuts-window.c
+index a54d6ab..e855c76 100644
+--- a/src/celluloid-shortcuts-window.c
++++ b/src/celluloid-shortcuts-window.c
+@@ -56,10 +56,8 @@ celluloid_shortcuts_window_init(CelluloidShortcutsWindow *wnd)
+ 			{"o <Shift>p", _("Show progress, elapsed time, and duration on the OSD")},
+ 			{NULL, NULL} };
+ 	const ShortcutEntry seeking[]
+-		= {	{"Left Right", _("Seek backward/forward 5 seconds")},
+-			{"<Shift>Left <Shift>Right", _("Exact seek backward/forward 1 second")},
+-			{"downarrow uparrow", _("Seek backward/forward 1 minute")},
+-			{"<Shift>downarrow <Shift>uparrow", _("Exact seek backward/forward 5 seconds")},
++		= {	{"Left Right", _("Exact seek backward/forward 5 seconds")},
++			{"downarrow uparrow", _("Exact seek backward/forward 1 minute")},
+ 			{"<Ctrl>Left <Ctrl>Right", _("Seek to previous/next subtitle")},
+ 			{"comma period", _("Step backward/forward a single frame")},
+ 			{"Page_Down Page_Up", _("Seek to the beginning of the previous/next chapter")},

@@ -1,3 +1,23 @@
+celluloid (0.28-2+grm5~alpha1) gooroom-5.0-unstable; urgency=medium
+
+  [ jongkyung.woo ]
+  * local package: Rebased on gooroom-5.0 (Debian Trixie)
+  * Ported Gooroom patches from 0.20 to 0.28 (GTK3 to GTK4/libadwaita):
+    - Fix shortcut key bindings (arrow keys, j/J ignore, bracket keys)
+    - Remove audio/video track menus (keep subtitle only)
+    - Remove application name from title bar
+    - Disable clipboard auto-loading in open location dialog
+    - Set minimum window size to 440x350
+  * Dropped patches no longer applicable:
+    - relax-gettext-version.patch (build system changed to meson)
+    - fix-makefile.patch (build system changed to meson)
+    - gooroom-fix-image-filter-issue.patch (fixed upstream in 0.28)
+    - gooroom-fixed-static-code-analysis-issue.patch (fixed upstream)
+    - gooroom-created-korean-po.patch (needs new translation for 0.28)
+    - GTK3-specific patches (pref dialog, dark theme, CSD, etc.)
+
+ -- Gooroom Autobuilder <jenkins@gooroom.kr>  Thu, 06 Feb 2026 10:00:00 +0900
+
 celluloid (0.28-2) unstable; urgency=high
 
   * Team upload.
