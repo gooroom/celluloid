@@ -1,0 +1,27 @@
+Index: celluloid.git/po/ko.po
+===================================================================
+--- celluloid.git.orig/po/ko.po
++++ celluloid.git/po/ko.po
+@@ -187,7 +187,7 @@ msgstr "마지막으로 액세스 한 �
+ #: data/io.github.celluloid_player.Celluloid.desktop.in:3
+ #: src/celluloid-application.c:473
+ msgid "Celluloid"
+-msgstr "Celluloid"
++msgstr "미디어 플레이어"
+ 
+ #: data/io.github.celluloid_player.Celluloid.appdata.xml.in:8
+ msgid "Plays videos"
+@@ -756,11 +756,11 @@ msgstr "재생 목록이 열려있는 �
+ 
+ #: data/io.github.celluloid_player.Celluloid.desktop.in:4
+ msgid "Multimedia Player"
+-msgstr "멀티미디어 플레이어"
++msgstr "미디어 플레이어"
+ 
+ #: data/io.github.celluloid_player.Celluloid.desktop.in:5
+ msgid "Play movies and videos"
+-msgstr "영화 및 비디오 재생"
++msgstr "동영상 및 비디오를 재생합니다"
+ 
+ #. Translators: Search terms to find this application. Don't translate the semicolons! The list MUST also end with a semicolon!
+ #: data/io.github.celluloid_player.Celluloid.desktop.in:16
